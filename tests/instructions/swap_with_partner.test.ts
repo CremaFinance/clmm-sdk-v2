@@ -1261,10 +1261,7 @@ describe("swap_with_partner", () => {
       }),
     ]);
     await confirmTx(increaseLiquidityTx);
-
-    console.log(poolCreateInfo.tokenAVault.toString(), "VaultA##");
-    console.log(poolCreateInfo.tokenBVault.toString(), "VaultA##");
-
+    
     const baseKeypair = anchor.web3.Keypair.generate();
     const authorityKeypair = anchor.web3.Keypair.generate();
     const claimAuthorityKeypair = anchor.web3.Keypair.generate();

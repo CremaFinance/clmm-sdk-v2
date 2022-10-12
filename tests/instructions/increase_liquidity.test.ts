@@ -65,10 +65,6 @@ describe("increase_liquidity", () => {
       initSqrtPrice: TickMath.tickIndexToSqrtPriceX64(currentTick),
     });
 
-    // console.log(
-    //   TickMath.tickIndexToSqrtPriceX64(currentTick).toString(),
-    //   "initSqrtPrice##"
-    // );
     const { poolCreateInfo, positions, tokenAccountA, tokenAccountB } =
       fixture.getInfos();
     const { clmmpool } = poolCreateInfo;

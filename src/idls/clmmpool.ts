@@ -1,4 +1,4 @@
-export type UclmmpoolIDL =
+export type ClmmpoolIDL =
 {
   "version": "0.1.0",
   "name": "clmmpool",
@@ -5074,7 +5074,7 @@ export type Clmmpool = {
   ]
 };
 
-export const AnchorUclmmpoolIDL: Clmmpool = {
+export const ClmmpoolIDL: Clmmpool = {
   "version": "0.1.0",
   "name": "clmmpool",
   "instructions": [
@@ -7611,7 +7611,7 @@ export const AnchorUclmmpoolIDL: Clmmpool = {
     }
   ]
 };
-export const UclmmpoolJSON: UclmmpoolIDL =
+export const ClmmpoolJSON: ClmmpoolIDL =
 {
   "version": "0.1.0",
   "name": "clmmpool",
@@ -10149,5 +10149,5 @@ export const UclmmpoolJSON: UclmmpoolIDL =
     }
   ]
 };
-import { generateErrorMap } from '@saberhq/anchor-contrib';
-export const UclmmpoolErrors = generateErrorMap(UclmmpoolJSON);
+import { generateErrorMap } from '@cremafinance/anchor-contrib';
+export const ClmmpoolErrors = generateErrorMap(ClmmpoolJSON);

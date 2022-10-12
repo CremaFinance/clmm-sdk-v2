@@ -1,7 +1,7 @@
 import type { Idl } from "@project-serum/anchor";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import type { Provider, Wallet } from "@saberhq/solana-contrib";
-import { SolanaProvider } from "@saberhq/solana-contrib";
+import type { Provider, Wallet } from "@cremafinance/solana-contrib";
+import { SolanaProvider } from "@cremafinance/solana-contrib";
 // import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
 import type { ConfirmOptions, Connection, PublicKey } from "@solana/web3.js";
 

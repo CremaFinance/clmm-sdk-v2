@@ -7,7 +7,7 @@ var context_1 = require("../context");
 var process_1 = require("process");
 // import * as fs from "fs";
 // import { parse } from "yaml";
-// import { SignerWallet } from "@saberhq/solana-contrib";
+// import { SignerWallet } from "@cremafinance/solana-contrib";
 var anchor = require("@project-serum/anchor");
 function makeSDK() {
     // const home: string | undefined = process.env.HOME;

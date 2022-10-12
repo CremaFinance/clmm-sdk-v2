@@ -2,22 +2,26 @@ import { BN } from "@project-serum/anchor";
 
 import { ClmmpoolsError, SwapErrorCode } from "../../errors/errors";
 import { ZERO } from "../../math/utils";
+import type { AccountFetcher } from "../../network";
 import { MAX_SQRT_PRICE, MAX_TICK_ARRAY, MIN_SQRT_PRICE } from "../../types";
-import { getTokenBalance } from "../../utils/token";
 import type { SwapQuote, SwapQuoteParam } from "../public/swap";
 import { computeSwap } from "./swap-manager";
 import { TickArraySequence } from "./tick-array-sequence";
 
-/**
- * Figure out the quote parameters needed to successfully complete this trade on chain
- * @param param
- * @returns
- * @exceptions
- */
-export async function simulateSwap(params: SwapQuoteParam): Promise<SwapQuote> {
+export async function simulateSwap(
+  fetcher: AccountFetcher,
+  params: SwapQuoteParam
+): Promise<SwapQuote> {
+  const clmmConfig = await fetcher.getConfig(params.clmmpoolData.clmmConfig);
+  const protocolFeeRate = clmmConfig!.protocolFeeRate;
+  return simulateSwapWithProFeeRate(params, protocolFeeRate);
+}
+
+export function simulateSwapWithProFeeRate(
+  params: SwapQuoteParam,
+  protocolFeeRate: number
+): SwapQuote {
   const {
-    fetcher,
-    provider,
     aToB,
     clmmpoolData,
     tickArrays,
@@ -62,8 +66,6 @@ export async function simulateSwap(params: SwapQuoteParam): Promise<SwapQuote> {
     clmmpoolData.currentTickIndex
   );
 
-  const clmmConfig = await fetcher.getConfig(clmmpoolData.clmmConfig);
-
   const swapResults = computeSwap(
     clmmpoolData,
     tickSequence,
@@ -71,7 +73,7 @@ export async function simulateSwap(params: SwapQuoteParam): Promise<SwapQuote> {
     sqrtPriceLimit,
     byAmountIn,
     0,
-    clmmConfig!.protocolFeeRate,
+    protocolFeeRate,
     aToB
   );
 
@@ -84,16 +86,8 @@ export async function simulateSwap(params: SwapQuoteParam): Promise<SwapQuote> {
   }
 
   let isExceed = false;
-  if (aToB) {
-    const balance = await getTokenBalance(provider, clmmpoolData.tokenBVault);
-    if (swapResults.amountOut.toNumber() > Number(balance)) {
-      isExceed = true;
-    }
-  } else {
-    const balance = await getTokenBalance(provider, clmmpoolData.tokenAVault);
-    if (swapResults.amountOut.toNumber() > Number(balance)) {
-      isExceed = true;
-    }
+  if (swapResults.amountIn.lt(tokenAmount)) {
+    isExceed = true;
   }
 
   return {

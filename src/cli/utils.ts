@@ -4,7 +4,7 @@ import { ClmmpoolContext } from "../context";
 import { exit } from "process";
 // import * as fs from "fs";
 // import { parse } from "yaml";
-// import { SignerWallet } from "@saberhq/solana-contrib";
+// import { SignerWallet } from "@cremafinance/solana-contrib";
 import { PublicKey } from '@solana/web3.js';
 // import { Address } from "@project-serum/anchor";
 export const DEFAULT_SWAP_PROGRAM_ID =
@@ -63,7 +63,6 @@ export function printObjectJSON(ins?: any, maxDeep = 1) {
       }
       return Object.fromEntries(data);
     };
-    console.log(JSON.stringify(convertObjt(ins, d), null, 4));
   }
 
 

@@ -1,4 +1,4 @@
-import { getOrCreateATAs, NATIVE_MINT } from "@saberhq/token-utils";
+import { getOrCreateATAs, NATIVE_MINT } from "@cremafinance/token-utils";
 import type { PublicKey } from "@solana/web3.js";
 import type { Position } from "../clmmpool-client";
 import type { ClmmpoolContext } from "../context";
@@ -6,7 +6,7 @@ import { ClmmpoolIx } from "../ix";
 import type { AccountFetcher } from "../network";
 import type { DecreaseLiquidityInput, IncreaseLiquidityInput, PositionData } from "../types";
 import { PDAUtil } from "../utils/pda";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import { TickArrayUtil, TickUtil } from "../utils/tick";
 import { TokenUtil } from "../utils/token-utils";
 import { Decimal } from 'decimal.js';
@@ -61,9 +61,8 @@ export class PositionImpl implements Position {
 
 
 
-    const tickUpper = this.data.tickLowerIndex
-    const tickLower = this.data.tickUpperIndex
-    console.log(tickLower, 'tickLower##')
+    const tickUpper = this.data.tickUpperIndex  
+    const tickLower = this.data.tickLowerIndex
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,
       swapKey,
@@ -133,9 +132,7 @@ export class PositionImpl implements Position {
     }
 
     const liquidityIx = ClmmpoolIx.increaseLiquidityWithFixedTokenIx(this.ctx.program, increaseLiquidityParams);
-    console.log(liquidityIx, 'liquidityIx##')
     instructions.push(liquidityIx)
-    console.log(instructions, 'instructions##')
     return new TransactionEnvelope(this.ctx.provider, instructions)
   }
 
@@ -146,13 +143,11 @@ export class PositionImpl implements Position {
 
   private async getDecreaseLiquidityTx(liquidityInput: DecreaseLiquidityInput, positionId: PublicKey, positionNftMint: PublicKey, swapKey: PublicKey) {
     const clmmpool = await this.fetcher.getPool(swapKey, true);
-    console.log(clmmpool, 'clmmpool##')
     if (!clmmpool) {
       throw new Error("Unable to fetch clmmpool for this position.");
     }
     const wallet = this.ctx.provider.wallet.publicKey
     const positionAta = await getOrCreateATAs({ provider: this.ctx.provider, mints: { positionAddress: positionNftMint }, owner: wallet });
-    console.log(positionAta.accounts.positionAddress.toBase58(), 'positionAta.accounts.positionAddress##')
     const accountATAs = await getOrCreateATAs({
       provider: this.ctx.provider,
       mints: {
@@ -162,8 +157,8 @@ export class PositionImpl implements Position {
       owner: wallet
     })
 
-    const tickUpper = this.data.tickLowerIndex
-    const tickLower = this.data.tickUpperIndex
+    const tickUpper = this.data.tickUpperIndex
+    const tickLower = this.data.tickLowerIndex  
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,
       swapKey,
@@ -214,9 +209,8 @@ export class PositionImpl implements Position {
       owner: this.ctx.provider.wallet.publicKey
     })
 
-    const tickUpper = this.data.tickLowerIndex
-    const tickLower = this.data.tickUpperIndex
-    console.log(tickLower, 'tickLower##')
+    const tickUpper = this.data.tickUpperIndex
+    const tickLower = this.data.tickLowerIndex
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,
       swapKey,

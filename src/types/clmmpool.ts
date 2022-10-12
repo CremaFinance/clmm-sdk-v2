@@ -1,4 +1,4 @@
-import type { AnchorTypes } from "@saberhq/anchor-contrib";
+import type { AnchorTypes } from "@cremafinance/anchor-contrib";
 import type { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
 

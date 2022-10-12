@@ -122,7 +122,6 @@ async function openPosition(
 ) {
   const sdk = await makeSDK()
   const poolList = await getAllClmmpools(sdk.ctx.provider.connection)
-  console.log(poolList,'poolList###')
   const swapSdk = await sdk.getPool(new PublicKey('2zr9FAV9MeATbRzow9MCsYip3EZgE6nXtr1puYbJNSh3'))
   const tx = await swapSdk.openPosition(tickLower, tickUpper, liquidityInput, isAFixed)
   await tx.confirm()
@@ -154,7 +153,6 @@ async function increaseLiquidity(
   )
 
   const tx = await positionSdk.increaseLiquidity(liquidityInput, positionId, positionNftMint, swapKey, isAFixed)
-  console.log(liquidityInput, 'liquidityInput###')
   await tx.confirm()
 }
 
@@ -169,7 +167,6 @@ async function decreaseLiquidity(
   const sdk = await makeSDK()
   const positionSdk = await sdk.getPosition(positionId)
   const positionInfo = await positionSdk.getData()
-  console.log(positionInfo.liquidity.toNumber(), 'positionInfo###')
   const tickLower = positionInfo.tickLowerIndex
   const tickUpper = positionInfo.tickUpperIndex
   const tokenAmount = isAFixed ? tokenMinA : tokenMinB
@@ -190,7 +187,6 @@ async function decreaseLiquidity(
   }
 
   const tx = await positionSdk.decreaseLiquidity(liquidityInput, positionId, positionNftMint, swapKey)
-  console.log(liquidityInput, 'liquidityInput###')
   await tx.confirm()
 }
 

@@ -1,5 +1,5 @@
 import type { Address } from "@project-serum/anchor";
-import type { TransactionEnvelope } from "@saberhq/solana-contrib";
+import type { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import type { PublicKey } from "@solana/web3.js";
 
 import type { ClmmpoolContext } from "./context";

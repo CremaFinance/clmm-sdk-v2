@@ -104,7 +104,6 @@ export function assertTick(
   liquidityGross: BN,
   liquidityNet: BN
 ) {
-  console.log(tick, "tick###");
   assert.ok(tick.isInitialized === isInitialized);
   assert.ok(tick.liquidityNet.eq(liquidityNet));
   assert.ok(tick.liquidityGross.eq(liquidityGross));

@@ -26,7 +26,6 @@ export class TickArraySequence {
     readonly arrayIndex: number,
     readonly tickIndex: number
   ) {
-    console.log(tickArrays, "tickArrays########");
     if (tickArrays[0] && tickArrays[0].data) {
       this.touchedArrays = [...Array<boolean>(tickArrays.length).fill(false)];
       this.startArrayIndex = TickArrayIndex.fromTickIndex(

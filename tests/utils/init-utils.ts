@@ -278,18 +278,16 @@ export async function createTestPoolWithTokens(
 ) {
   const provider = ctx.provider;
 
-  console.log(122);
   const { poolCreateInfo, configCreateInfo, configKeypairs } =
     await createTestPool(ctx, tickSpacing, initSqrtPrice);
 
-  console.log(123);
   const { tokenA, tokenB, clmmpool } = poolCreateInfo;
   const tokenAccountA = await createAndMintToAssociatedTokenAccount(
     provider,
     tokenA,
     mintAmount
   );
-  console.log(124);
+  
   const tokenAccountB = await createAndMintToAssociatedTokenAccount(
     provider,
     tokenB,

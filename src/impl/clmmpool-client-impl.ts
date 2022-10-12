@@ -20,10 +20,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
     return this.ctx.fetcher;
   }
 
-  // async initializePool() {
-    
-  // }
-
   async getPool(poolAddress: Address, refresh = false): Promise<Clmmpool> {
     const account = await this.ctx.fetcher.getPool(poolAddress, refresh);
     if (!account) {
@@ -39,7 +35,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
       account,
       refresh
     );
-    // const rewardInfos = await getRewardInfos(this.ctx.fetcher, account, refresh);
       
       return new ClmmpoolImpl(
         this.ctx,
@@ -49,7 +44,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
         tokenInfos[1],
         vaultInfos[0],
         vaultInfos[1],
-        //   rewardInfos,
         account
       );
   }
@@ -73,11 +67,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
       tokenMints.add(account.tokenB.toBase58());
       tokenAccounts.add(account.tokenAVault.toBase58());
       tokenAccounts.add(account.tokenBVault.toBase58());
-      //   account.rewardInfos.forEach((rewardInfo) => {
-      //     if (PoolUtil.isRewardInitialized(rewardInfo)) {
-      //       tokenAccounts.add(rewardInfo.vault.toBase58());
-      //     }
-      //   });
     });
     await this.ctx.fetcher.listMintInfos(Array.from(tokenMints), refresh);
     await this.ctx.fetcher.listTokenInfos(Array.from(tokenAccounts), refresh);
@@ -96,7 +85,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
         account,
         false
       );
-      //   const rewardInfos = await getRewardInfos(this.ctx.fetcher, account, false);
       clmmpools.push(
         new ClmmpoolImpl(
           this.ctx,
@@ -106,7 +94,6 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
           tokenInfos[1],
           vaultInfos[0],
           vaultInfos[1],
-          //   rewardInfos,
           account
         )
       );

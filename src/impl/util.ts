@@ -1,8 +1,6 @@
 import type { AccountFetcher } from "..";
 import type {
   ClmmpoolData,
-  //   WhirlpoolRewardInfo,
-  //   WhirlpoolRewardInfoData,
   TokenAccountInfo,
   TokenInfo,
 } from "../types";
@@ -27,35 +25,6 @@ export async function getTokenMintInfos(
     { mint: mintB, ...infoB },
   ];
 }
-
-// export async function getRewardInfos(
-//   fetcher: AccountFetcher,
-//   data: WhirlpoolData,
-//   refresh: boolean
-// ): Promise<WhirlpoolRewardInfo[]> {
-//   const rewardInfos: WhirlpoolRewardInfo[] = [];
-//   for (const rewardInfo of data.rewardInfos) {
-//     rewardInfos.push(await getRewardInfo(fetcher, rewardInfo, refresh));
-//   }
-//   return rewardInfos;
-// }
-
-// async function getRewardInfo(
-//   fetcher: AccountFetcher,
-//   data: WhirlpoolRewardInfoData,
-//   refresh: boolean
-// ): Promise<WhirlpoolRewardInfo> {
-//   const rewardInfo = { ...data, initialized: false, vaultAmount: new BN(0) };
-//   if (PoolUtil.isRewardInitialized(data)) {
-//     const vaultInfo = await fetcher.getTokenInfo(data.vault, refresh);
-//     if (!vaultInfo) {
-//       throw new Error(`Unable to fetch TokenAccountInfo for vault - ${data.vault}`);
-//     }
-//     rewardInfo.initialized = true;
-//     rewardInfo.vaultAmount = vaultInfo.amount;
-//   }
-//   return rewardInfo;
-// }
 
 export async function getTokenVaultAccountInfos(
   fetcher: AccountFetcher,

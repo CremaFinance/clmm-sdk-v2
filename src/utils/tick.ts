@@ -1,5 +1,5 @@
-import type { Provider } from "@saberhq/solana-contrib";
-import { getTokenAccount } from "@saberhq/token-utils";
+import type { Provider } from "@cremafinance/solana-contrib";
+import { getTokenAccount } from "@cremafinance/token-utils";
 import type { PublicKey } from "@solana/web3.js";
 import { BN } from "bn.js";
 import invariant from "tiny-invariant";
@@ -131,7 +131,6 @@ export class TickUtil {
    *
    * @retruns true or false
    */
-
   static checkTickInBounds(tick: number) {
     return tick <= MAX_TICK_INDEX && tick >= MIN_TICK_INDEX;
   }
@@ -618,7 +617,6 @@ export async function createTickArrayRange(
 
   while (array_count > 0 && tickArrayMap !== null) {
     const index = getNextSetedTickArray(tickArrayMap, array_index, a2b);
-    console.log(index, "index ++++++++++++");
     if (index !== null) {
       const tickArray_i = PDAUtil.getTickArrayPDA(programId, clmmpool, index);
       tickArrays.push(tickArray_i.publicKey);

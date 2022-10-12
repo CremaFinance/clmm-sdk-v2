@@ -1,6 +1,6 @@
 {
-  "name": "dyt-sdk",
-  "version": "0.0.87",
+  "name": "cremav2-sdk",
+  "version": "0.0.9",
   "scripts": {
     "idl:generate": "./scripts/parse-idls.sh && ./scripts/generate-idl-types.sh",
     "lint:fix": "eslint --fix --ext .ts --ignore-path .gitignore .",
@@ -10,10 +10,14 @@
   },
   "license": "AGPL-3.0",
   "dependencies": {
+    "@cremafinance/anchor-contrib": "^1.14.1",
+    "@cremafinance/solana-contrib": "^1.14.1",
+    "@cremafinance/token-utils": "^1.14.1",
     "@metaplex-foundation/js": "^0.15.0",
     "@metaplex-foundation/mpl-token-metadata": "1.2.5",
     "@project-serum/anchor": "^0.25.0",
     "@saberhq/token-utils": "^1.14.1",
+    "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token-registry": "^0.2.4484",
     "@solana/web3.js": "^1.50.1",
     "bn.js": "^5.2.1",

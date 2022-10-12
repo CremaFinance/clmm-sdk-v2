@@ -1,5 +1,4 @@
 import type { Address, BN } from "@project-serum/anchor";
-import type { Provider } from "@saberhq/solana-contrib";
 import type { u64 } from "@solana/spl-token";
 import invariant from "tiny-invariant";
 
@@ -27,8 +26,6 @@ import { simulateSwap } from "../swap/swap-quote-impl";
  * @param tickArrays - An sequential array of tick-array objects in the direction of the trade to swap on
  */
 export type SwapQuoteParam = {
-  fetcher: AccountFetcher;
-  provider: Provider;
   clmmpoolData: ClmmpoolData;
   tokenAmount: u64;
   amountLimit: u64;
@@ -75,7 +72,6 @@ export async function swapQuoteByInputToken(
   slippageTolerance: Percentage,
   programId: Address,
   fetcher: AccountFetcher,
-  provider: Provider,
   refresh: boolean
 ): Promise<SwapQuote> {
   return swapQuoteByToken(
@@ -87,7 +83,6 @@ export async function swapQuoteByInputToken(
     true,
     programId,
     fetcher,
-    provider,
     refresh
   );
 }
@@ -115,7 +110,6 @@ export async function swapQuoteByOutputToken(
   slippageTolerance: Percentage,
   programId: Address,
   fetcher: AccountFetcher,
-  provider: Provider,
   refresh: boolean
 ): Promise<SwapQuote> {
   return swapQuoteByToken(
@@ -127,7 +121,6 @@ export async function swapQuoteByOutputToken(
     false,
     programId,
     fetcher,
-    provider,
     refresh
   );
 }
@@ -141,12 +134,13 @@ export async function swapQuoteByOutputToken(
  * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end whirlpool states.
  */
 export async function swapQuoteWithParams(
+  fetcher: AccountFetcher,
   params: SwapQuoteParam,
   slippageTolerance: Percentage
 ) {
   checkIfAllTickArraysInitialized(params.tickArrays);
 
-  const quote = await simulateSwap(params);
+  const quote = await simulateSwap(fetcher, params);
 
   const slippageAdjustedQuote: SwapQuote = {
     ...quote,
@@ -171,7 +165,6 @@ async function swapQuoteByToken(
   amountSpecifiedIsInput: boolean,
   programId: Address,
   fetcher: AccountFetcher,
-  provider: Provider,
   refresh: boolean
 ) {
   const whirlpoolData = whirlpool.getData();
@@ -194,9 +187,8 @@ async function swapQuoteByToken(
   );
 
   return swapQuoteWithParams(
+    fetcher,
     {
-      fetcher,
-      provider,
       clmmpoolData: whirlpoolData,
       tokenAmount,
       aToB,

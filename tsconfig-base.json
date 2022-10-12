@@ -15,10 +15,13 @@
   },
   "references": [
     {
-      "path": "./src/tsconfig.json"
+      "path": "./src/tsconfig.json",
     },
     {
       "path": "./tests/tsconfig.json"
+    },
+    {
+      "path": "./crema_sdk/tsconfig.json"
     }
   ]
 }

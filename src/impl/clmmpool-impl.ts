@@ -1,8 +1,8 @@
 import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { Address, BN } from "@project-serum/anchor";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
-import { getOrCreateATA, getOrCreateATAs } from "@saberhq/token-utils"
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
+import { getOrCreateATA, getOrCreateATAs } from "@cremafinance/token-utils"
 import type { Clmmpool } from "../clmmpool-client";
 import type { ClmmpoolContext } from "../context";
 import type { AccountFetcher } from "../network";
@@ -197,16 +197,6 @@ export class ClmmpoolImpl implements Clmmpool {
       instructions.push(...tickArrayInstructions)
     }
 
-
-    // if (clmmpool.tokenA.equals(NATIVE_MINT)) {
-    //   const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenMaxA.toString()));
-    //   instructions.unshift(...wrapSOLTx.instructions);
-    // }
-    // if (clmmpool.tokenB.equals(NATIVE_MINT)) {
-    //   const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenMaxB.toString()));
-    //   instructions.unshift(...wrapSOLTx.instructions);
-    // }
-
     const liquidityInputWithFixedToken = {
       tokenA: tokenMaxA,
       tokenB: tokenMaxB,
@@ -228,6 +218,25 @@ export class ClmmpoolImpl implements Clmmpool {
     }
     const liquidityIx = ClmmpoolIx.increaseLiquidityWithFixedTokenIx(this.ctx.program, increaseLiquidityParams);
     instructions.push(liquidityIx)
+
+    if (
+      clmmpool.tokenA.equals(NATIVE_MINT) &&
+      tokenMaxA.gt(new BN(0))
+    ) {
+      const wrapSOLInstructions = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenMaxA.toString()));
+      instructions.unshift(...wrapSOLInstructions.instructions);
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    if (
+      clmmpool.tokenB.equals(NATIVE_MINT) &&
+      tokenMaxB.gt(new BN(0))
+    ) {
+      const wrapSOLInstructions = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenMaxB.toString()));
+      instructions.unshift(...wrapSOLInstructions.instructions);
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
 
     return new TransactionEnvelope(this.ctx.provider, instructions, [positionNftMint])
 
@@ -287,8 +296,8 @@ export class ClmmpoolImpl implements Clmmpool {
       ).publicKey
     })])
 
-    const tickUpper = position.tickLowerIndex
-    const tickLower = position.tickUpperIndex
+    const tickUpper = position.tickUpperIndex 
+    const tickLower = position.tickLowerIndex
     console.log(tickLower, 'tickLower##')
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,

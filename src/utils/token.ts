@@ -1,5 +1,5 @@
 import type { web3 } from "@project-serum/anchor";
-import type { Provider } from "@saberhq/solana-contrib";
+import type { Provider } from "@cremafinance/solana-contrib";
 import { struct, u8 } from "@solana/buffer-layout";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
