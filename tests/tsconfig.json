@@ -1,8 +1,6 @@
 {
-    "extends": "../tsconfig-base.json",
-    "references": [
-        {
-        "path": "../tests",
-        }
-    ]
+  "extends": "../tsconfig-base.json",
+  "compilerOptions": {
+    "composite": true
+  }
 }

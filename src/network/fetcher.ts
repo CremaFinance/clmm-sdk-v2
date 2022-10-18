@@ -62,7 +62,7 @@ type GetMultipleAccountsResponse = {
 };
 
 /**
- * Data access layer to access Whirlpool related accounts
+ * Data access layer to access clmmpool related accounts
  * Includes internal cache that can be refreshed by the client.
  *
  * @category Core
@@ -217,11 +217,11 @@ export class AccountFetcher {
   }
 
   /**
-   * Retrieve a cached whirlpool config account. Fetch from rpc on cache miss.
+   * Retrieve a cached clmmpool config account. Fetch from rpc on cache miss.
    *
-   * @param address whirlpool config address
+   * @param address clmmpool config address
    * @param refresh force cache refresh
-   * @returns whirlpool config account
+   * @returns clmmpool config account
    */
   async getConfig(
     address: Address,
@@ -249,11 +249,11 @@ export class AccountFetcher {
   }
 
   /**
-   * Retrieve a list of cached whirlpool accounts. Fetch from rpc for cache misses.
+   * Retrieve a list of cached clmmpool accounts. Fetch from rpc for cache misses.
    *
-   * @param addresses whirlpool addresses
+   * @param addresses clmmpool addresses
    * @param refresh force cache refresh
-   * @returns whirlpool accounts
+   * @returns clmmpool accounts
    */
   async listPools(
     addresses: Address[],

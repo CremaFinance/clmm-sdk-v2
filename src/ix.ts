@@ -21,7 +21,6 @@ export type SwapInput = {
   byAmountIn: boolean;
   amount: BN;
   amountLimit: BN;
-  // sqrtPriceLimit: number;
 };
 
 export type SwapWithPartnerParams = {
@@ -412,7 +411,6 @@ export class ClmmpoolIx {
 
   /**
    * Create a ClmmConfig account that hosts info & authorities
-   * required to govern a set of Whirlpools.
    *
    * @param program - program object containing services required to generate the instruction
    * @param params - InitConfigParams object
@@ -1025,6 +1023,56 @@ export class ClmmpoolIx {
         },
       }
     );
+    return ix;
+  }
+
+  /**
+   * Pause clmmpool
+   * @param program
+   * @param params
+   * @returns
+   */
+  static pauseClmmpoolIx(
+    program: Program<Clmmpool>,
+    params: {
+      clmmConfig: PublicKey;
+      protocolAuthority: PublicKey;
+      clmmpool: PublicKey;
+    }
+  ): TransactionInstruction {
+    const { clmmConfig, protocolAuthority, clmmpool } = params;
+    const ix = program.instruction.pauseClmmpool({
+      accounts: {
+        clmmConfig,
+        protocolAuthority,
+        clmmpool,
+      },
+    });
+    return ix;
+  }
+
+  /**
+   * UnPause clmmpool
+   * @param program
+   * @param params
+   * @returns
+   */
+  static unPauseClmmpoolIx(
+    program: Program<Clmmpool>,
+    params: {
+      clmmConfig: PublicKey;
+      protocolAuthority: PublicKey;
+      clmmpool: PublicKey;
+    }
+  ): TransactionInstruction {
+    const { clmmConfig, protocolAuthority, clmmpool } = params;
+    const ix = program.instruction.unpauseClmmpool({
+      accounts: {
+        clmmConfig,
+        protocolAuthority,
+        clmmpool,
+      },
+    });
     return ix;
   }
 }

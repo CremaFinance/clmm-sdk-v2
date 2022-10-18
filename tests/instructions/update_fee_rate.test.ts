@@ -105,7 +105,7 @@ describe("update_fee_rate", () => {
     }
   });
 
-  it("fails when whirlpool and whirlpools config don't match", async () => {
+  it("fails when clmmpool and clmmpools config don't match", async () => {
     // first create a clmm pool
     const { poolCreateInfo, configCreateInfo, configKeypairs } =
       await createTestPool(

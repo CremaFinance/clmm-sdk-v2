@@ -151,7 +151,7 @@ export class ClmmpoolImpl implements Clmmpool {
       },
       owner: this.ctx.provider.wallet.publicKey
     })
-    instructions.push(...accountATAs.instructions)
+    // instructions.push(...accountATAs.instructions)
 
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,
@@ -238,6 +238,8 @@ export class ClmmpoolImpl implements Clmmpool {
       instructions.push(...unwrapSOLInstructions.instructions);
     }
 
+    instructions.unshift(...accountATAs.instructions)
+
     return new TransactionEnvelope(this.ctx.provider, instructions, [positionNftMint])
 
   }
@@ -298,7 +300,6 @@ export class ClmmpoolImpl implements Clmmpool {
 
     const tickUpper = position.tickUpperIndex 
     const tickLower = position.tickLowerIndex
-    console.log(tickLower, 'tickLower##')
     const tickArrayLower = PDAUtil.getTickArrayPDA(
       this.ctx.program.programId,
       swapKey,
@@ -327,21 +328,6 @@ export class ClmmpoolImpl implements Clmmpool {
       })]
     )
 
-    // const  collectRewarderIx = new TransactionEnvelope(this.ctx.provider,[
-    //   ClmmpoolIx.collectRewarderIx(this.ctx.program,{
-    //     owner: wallet,
-    //     clmmpool: swapKey,
-    //     position: positionId,
-    //     positionAta: positionAta.accounts.positionAddress,
-    //     rewarderAta:'',
-    //     mintWrapper:clmmpool.rewarderInfos[i].mintWrapper ,
-    //     minter:'',
-    //     rewardsTokenMint:'',
-    //     tickArrayLower,
-    //     tickArrayUpper
-    //   })
-    // ]) 
-
     const collectRewarderIxResult = [];
     const collectRewarderArr:string[] = []
 
@@ -353,7 +339,7 @@ export class ClmmpoolImpl implements Clmmpool {
 
         if (rewarderAta && rewarderAta.instructions&&!collectRewarderArr.includes(rewarderAta.accounts.address.toBase58())) {
           collectRewarderArr.push(rewarderAta.accounts.address.toBase58())
-          collectRewarderIxResult.push(...rewarderAta.instructions)
+          collectRewarderIxResult.unshift(...rewarderAta.instructions)
         }
         const collectRewarderIx =
           ClmmpoolIx.collectRewarderIx(this.ctx.program, {
@@ -381,6 +367,7 @@ export class ClmmpoolImpl implements Clmmpool {
     const positionEdition = PDAUtil.getPositionEditionPDA(positionNftMint).publicKey
 
     const closePositionIx = new TransactionEnvelope(this.ctx.provider, [
+      ...accountATAs.instructions,
       ...decreaseLiquidityIx.instructions,
       ...collectRewarderIxResult,
       ...cliamIx.instructions,
@@ -411,40 +398,39 @@ export class ClmmpoolImpl implements Clmmpool {
     return createTickArrayIx
   }
 
-  async swap(quote: SwapQuote, sourceWallet?: Address): Promise<TransactionEnvelope> {
+  async swap(quote: SwapInput, sourceWallet?: Address): Promise<TransactionEnvelope> {
     const sourceWalletKey = sourceWallet
       ? AddressUtil.toPubKey(sourceWallet)
       : this.ctx.wallet.publicKey;
-    return this.getSwapTx(quote, sourceWalletKey);
-  }
+    // return this.getSwapTx(quote, sourceWalletKey);
 
-  private async getSwapTx(input: SwapInput, wallet: PublicKey): Promise<TransactionEnvelope> {
+    const instructions: TransactionInstruction[] = [];
     const clmmpool = this.data;
-
     const accountATAs = await getOrCreateATAs({
       provider: this.ctx.provider,
       mints: {
         tokenA: clmmpool.tokenA,
         tokenB: clmmpool.tokenB
       },
-      owner: wallet
+      owner: sourceWalletKey
     })
+    instructions.push(...accountATAs.instructions);
+    const swapTx = await this.getSwapTx(quote, sourceWalletKey, accountATAs.accounts.tokenA, accountATAs.accounts.tokenB)
+    swapTx.instructions.unshift(...instructions);
+
+    return swapTx;
+  }
+
+  private async getSwapTx(input: SwapInput, wallet: PublicKey, accountA: PublicKey, accountB: PublicKey): Promise<TransactionEnvelope> {
+    const clmmpool = this.data;
 
     const tickArrayMap = PDAUtil.getTickArrayMapPDA(this.ctx.program.programId, this.address)
 
     const sqrtPriceLimit = SwapUtils.getDefaultSqrtPriceLimit(input.aToB)
     const tickArrayIndex = TickUtil.getArrayIndex(this.data.currentTickIndex, this.data.tickSpacing)
     const remainAccount = await createTickArrayRange(this.ctx, this.ctx.program.programId ,this.address, tickArrayIndex, 0, input.aToB)
-    // const tickArrays = [];
-    // for (const r of remainAccount) {
-    //   const tickArrayData = await this.ctx.fetcher.getTickArray(r);
-    //   const tickArray: TickArray = {
-    //     address: r,
-    //     data: tickArrayData,
-    //   };
-    //   tickArrays.push(tickArray);
-    // }
-    const tx = new TransactionEnvelope(this.ctx.provider, [...accountATAs.instructions, ClmmpoolIx.swapIx(this.ctx.program, {
+    
+    const tx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.swapIx(this.ctx.program, {
       aToB: input.aToB,
       byAmountIn: input.byAmountIn,
       amount: new BN(input.amount.toString()),
@@ -453,8 +439,8 @@ export class ClmmpoolImpl implements Clmmpool {
       clmmpool: this.address,
       tokenA: clmmpool.tokenA,
       tokenB: clmmpool.tokenB,
-      accountA: accountATAs.accounts.tokenA,
-      accountB: accountATAs.accounts.tokenB,
+      accountA,
+      accountB,
       tokenAVault: clmmpool.tokenAVault,
       tokenBVault: clmmpool.tokenBVault,
       tickArrayMap: tickArrayMap.publicKey,
@@ -466,25 +452,26 @@ export class ClmmpoolImpl implements Clmmpool {
     const amountLimit = new Decimal(input.amountLimit.toString())
 
     if (clmmpool.tokenA.equals(NATIVE_MINT)) {
+      
       if (input.aToB) {
         const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, input.byAmountIn ? amount : amountLimit);
         tx.instructions.unshift(...wrapSOLTx.instructions);
-        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA)
+        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountA)
         tx.instructions.push(...unwrapSOLTx.instructions);
       } else {
-        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountA);
         tx.instructions.push(...unwrapSOLTx.instructions);
       }
     }
 
     if (clmmpool.tokenB.equals(NATIVE_MINT)) {
       if (input.aToB) {
-        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountB);
         tx.instructions.push(...unwrapSOLTx.instructions);
       } else {
         const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, input.byAmountIn ? amount : amountLimit);
         tx.instructions.unshift(...wrapSOLTx.instructions);
-        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+        const unwrapSOLTx = await TokenUtil.unwrapSOL(this.ctx.provider, accountB);
         tx.instructions.push(...unwrapSOLTx.instructions);
       }
     }

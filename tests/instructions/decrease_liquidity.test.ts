@@ -641,7 +641,7 @@ describe("decrease_liquidity", () => {
     }
   });
 
-  it("fails when position does not match whirlpool", async () => {
+  it("fails when position does not match clmmpool", async () => {
     const currentTick = 0;
     const tickLowerIndex = -1280,
       tickUpperIndex = 1280;
@@ -692,7 +692,7 @@ describe("decrease_liquidity", () => {
     }
   });
 
-  it("fails when token vaults do not match whirlpool vaults", async () => {
+  it("fails when token vaults do not match clmmpool vaults", async () => {
     const currentTick = 0;
     const tickLowerIndex = -1280,
       tickUpperIndex = 1280;
@@ -769,7 +769,7 @@ describe("decrease_liquidity", () => {
     }
   });
 
-  it("fails when owner token account mint does not match whirlpool token mint", async () => {
+  it("fails when owner token account mint does not match clmmpool token mint", async () => {
     const currentTick = 0;
     const tickLowerIndex = -1280,
       tickUpperIndex = 1280;
@@ -1108,7 +1108,7 @@ describe("decrease_liquidity", () => {
     }
   });
 
-  it("fails when the tick arrays are for a different whirlpool", async () => {
+  it("fails when the tick arrays are for a different clmmpool", async () => {
     const currentTick = 0;
     const tickLowerIndex = -1280,
       tickUpperIndex = 1280;

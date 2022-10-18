@@ -22,9 +22,9 @@ import { confirmTx } from "./utils";
 const defaultInitSqrtPrice = MathUtil.toX64_BN(new anchor.BN(5));
 
 /**
- * Initialize a brand new WhirlpoolsConfig account and construct a set of InitPoolParams
+ * Initialize a brand new clmmpoolsConfig account and construct a set of InitPoolParams
  * that can be used to initialize a pool with.
- * @param client - an instance of whirlpool client containing the program & provider
+ * @param client - an instance of clmmpool client containing the program & provider
  * @param initSqrtPrice - the initial sqrt-price for this newly generated pool
  * @returns An object containing the params used to init the config account & the param that can be used to init the pool account.
  */
@@ -63,8 +63,8 @@ export async function buildTestPoolParams(
 }
 
 /**
- * Initialize a brand new set of WhirlpoolsConfig & Whirlpool account
- * @param client - an instance of whirlpool client containing the program & provider
+ * Initialize a brand new set of clmmpoolsConfig & clmmpool account
+ * @param client - an instance of clmmpool client containing the program & provider
  * @param initSqrtPrice - the initial sqrt-price for this newly generated pool
  * @returns An object containing the params used to initialize both accounts.
  */

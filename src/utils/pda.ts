@@ -42,12 +42,14 @@ export class PDAUtil {
     tokenMintBKey: PublicKey,
     tickSpacing: number
   ) {
+    const [mintA, mintB] = tokenMintAKey.toBuffer() < tokenMintBKey.toBuffer() ? [tokenMintAKey, tokenMintBKey] : [tokenMintBKey, tokenMintAKey];
+
     return AddressUtil.findProgramAddress(
       [
         Buffer.from(PDA_CLMMPOOL_SEED),
         clmmConfigKey.toBuffer(),
-        tokenMintAKey.toBuffer(),
-        tokenMintBKey.toBuffer(),
+        mintA.toBuffer(),
+        mintB.toBuffer(),
         new BN(tickSpacing).toArrayLike(Buffer, "le", 2),
       ],
       programId

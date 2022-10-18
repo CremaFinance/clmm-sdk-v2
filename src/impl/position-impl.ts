@@ -10,6 +10,7 @@ import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import { TickArrayUtil, TickUtil } from "../utils/tick";
 import { TokenUtil } from "../utils/token-utils";
 import { Decimal } from 'decimal.js';
+import BN from "bn.js";
 
 
 export class PositionImpl implements Position {
@@ -102,14 +103,7 @@ export class PositionImpl implements Position {
     }
     instructions.push(...tickArrayInstructions)
 
-    if (clmmpool.tokenA.equals(NATIVE_MINT)) {
-      const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenAMax.toString()));
-      instructions.unshift(...wrapSOLTx.instructions);
-    }
-    if (clmmpool.tokenB.equals(NATIVE_MINT)) {
-      const wrapSOLTx = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenBMax.toString()));
-      instructions.unshift(...wrapSOLTx.instructions);
-    }
+    
 
     const liquidityInputWithFixedToken = {
       tokenA: tokenAMax,
@@ -133,6 +127,26 @@ export class PositionImpl implements Position {
 
     const liquidityIx = ClmmpoolIx.increaseLiquidityWithFixedTokenIx(this.ctx.program, increaseLiquidityParams);
     instructions.push(liquidityIx)
+    if (
+      clmmpool.tokenA.equals(NATIVE_MINT) &&
+      tokenAMax.gt(new BN(0))
+    ) {
+      const wrapSOLInstructions = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenAMax.toString()));
+      instructions.unshift(...wrapSOLInstructions.instructions);
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    if (
+      clmmpool.tokenB.equals(NATIVE_MINT) &&
+      tokenBMax.gt(new BN(0))
+    ) {
+      const wrapSOLInstructions = await TokenUtil.wrapSOL(this.ctx.provider, new Decimal(tokenBMax.toString()));
+      instructions.unshift(...wrapSOLInstructions.instructions);
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+
+    instructions.unshift(...accountATAs.instructions)
     return new TransactionEnvelope(this.ctx.provider, instructions)
   }
 
@@ -170,8 +184,8 @@ export class PositionImpl implements Position {
       TickUtil.getArrayIndex(tickUpper, clmmpool.tickSpacing)
     ).publicKey;
     const tickArrayMap = PDAUtil.getTickArrayMapPDA(this.ctx.program.programId, swapKey).publicKey
-
-    const decreaseLiquidityIx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.decreaseLiquidityIx(this.ctx.program, {
+    const decreaseLiquidityInstructions = []
+    const decreaseLiquidityIx = ClmmpoolIx.decreaseLiquidityIx(this.ctx.program, {
       liquidityInput,
       owner: wallet,
       clmmpool: swapKey,
@@ -184,8 +198,12 @@ export class PositionImpl implements Position {
       tickArrayLower,
       tickArrayUpper,
       tickArrayMap,
-    })])
-    return decreaseLiquidityIx
+    })
+    decreaseLiquidityInstructions.push(decreaseLiquidityIx)
+    decreaseLiquidityInstructions.unshift(...accountATAs.instructions)
+    
+    return new TransactionEnvelope(this.ctx.provider, decreaseLiquidityInstructions)
+
   }
   async claim(positionId: PublicKey, positionNftMint: PublicKey, swapKey: PublicKey) {
     await this.refreshData()
@@ -221,8 +239,8 @@ export class PositionImpl implements Position {
       swapKey,
       TickUtil.getArrayIndex(tickUpper, clmmpool.tickSpacing)
     ).publicKey;
-    const cliamIx = new TransactionEnvelope(this.ctx.provider, [
-      ClmmpoolIx.collectFeeIx(this.ctx.program, {
+    const claimInstructions = []
+    const cliamIx = ClmmpoolIx.collectFeeIx(this.ctx.program, {
         owner: wallet,
         clmmpool: swapKey,
         position: positionId,
@@ -233,11 +251,12 @@ export class PositionImpl implements Position {
         tokenBVault: clmmpool.tokenBVault,
         tickArrayLower,
         tickArrayUpper
-
       })
-    ])
 
-    return cliamIx
+    claimInstructions.push(cliamIx)
+    claimInstructions.unshift(...accountATAs.instructions)
+     return new TransactionEnvelope(this.ctx.provider, claimInstructions)
+
   }
 
   private async refresh() {

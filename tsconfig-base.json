@@ -21,7 +21,7 @@
       "path": "./tests/tsconfig.json"
     },
     {
-      "path": "./crema_sdk/tsconfig.json"
+      "path": "./integration/jupiter/tsconfig.json"
     }
   ]
 }

@@ -35,7 +35,7 @@ describe("swap_with_partner", () => {
   const ctx = ClmmpoolContext.fromWorkspace(provider, program);
   const fetcher = ctx.fetcher;
 
-  it("fail on token vault mint does not match whirlpool token", async () => {
+  it("fail on token vault mint does not match clmmpool token", async () => {
     // create a test pool
     const currentTick = 0;
     const tickLowerIndex = 0,
@@ -140,7 +140,7 @@ describe("swap_with_partner", () => {
       true
     );
 
-    // fail on token vault mint a does not match whirlpool token a
+    // fail on token vault mint a does not match clmmpool token a
     const tx01 = new TransactionEnvelope(ctx.provider, [
       ClmmpoolIx.swapWithPartnerIx(ctx.program, {
         aToB: true,
@@ -171,7 +171,7 @@ describe("swap_with_partner", () => {
       assert.equal("6020", parseMessage((e as Error).message.toString()));
     }
 
-    // fail on token vault mint b does not match whirlpool token b
+    // fail on token vault mint b does not match clmmpool token b
     const tx02 = new TransactionEnvelope(ctx.provider, [
       ClmmpoolIx.swapWithPartnerIx(ctx.program, {
         aToB: true,
@@ -478,7 +478,7 @@ describe("swap_with_partner", () => {
       true
     );
 
-    // fail on token vault mint a does not match whirlpool token a
+    // fail on token vault mint a does not match clmmpool token a
     const tx = new TransactionEnvelope(
       ctx.provider,
       [
@@ -793,7 +793,7 @@ describe("swap_with_partner", () => {
     }
   });
 
-  it("fails on passing in the tick-array-map from another whirlpool", async () => {
+  it("fails on passing in the tick-array-map from another clmmpool", async () => {
     // create a test pool
     const currentTick = 0;
     const tickLowerIndex = 0,

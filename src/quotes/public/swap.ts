@@ -28,7 +28,6 @@ import { simulateSwap } from "../swap/swap-quote-impl";
 export type SwapQuoteParam = {
   clmmpoolData: ClmmpoolData;
   tokenAmount: u64;
-  amountLimit: u64;
   sqrtPriceLimit: BN;
   aToB: boolean;
   byAmountIn: boolean;
@@ -40,8 +39,8 @@ export type SwapQuoteParam = {
  * @category Quotes
  * @param estimatedAmountIn - Approximate number of input token swapped in the swap
  * @param estimatedAmountOut - Approximate number of output token swapped in the swap
- * @param estimatedEndTickIndex - Approximate tick-index the Whirlpool will land on after this swap
- * @param estimatedEndSqrtPrice - Approximate sqrtPrice the Whirlpool will land on after this swap
+ * @param estimatedEndTickIndex - Approximate tick-index the clmmpool will land on after this swap
+ * @param estimatedEndSqrtPrice - Approximate sqrtPrice the clmmpool will land on after this swap
  * @param estimatedFeeAmount - Approximate feeAmount (all fees) charged on this swap
  */
 export type SwapQuote = {
@@ -50,23 +49,26 @@ export type SwapQuote = {
   estimatedEndSqrtPrice: BN;
   estimatedFeeAmount: u64;
   isExceed: boolean;
-} & SwapInput;
+  aToB: boolean;
+  byAmountIn: boolean;
+  amount: BN;
+}
 
 /**
  * Get an estimated swap quote using input token amount.
  *
  * @category Quotes
- * @param whirlpool - Whirlpool to perform the swap on
+ * @param clmmpool - clmmpool to perform the swap on
  * @param inputTokenMint - PublicKey for the input token mint to swap with
  * @param tokenAmount - The amount of input token to swap from
  * @param slippageTolerance - The amount of slippage to account for in this quote
- * @param programId - PublicKey for the Whirlpool ProgramId
+ * @param programId - PublicKey for the clmmpool ProgramId
  * @param fetcher - AccountFetcher object to fetch solana accounts
  * @param refresh - If true, fetcher would default to fetching the latest accounts
- * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end whirlpool states.
+ * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end clmmpool states.
  */
 export async function swapQuoteByInputToken(
-  whirlpool: Clmmpool,
+  clmmpool: Clmmpool,
   inputTokenMint: Address,
   tokenAmount: u64,
   slippageTolerance: Percentage,
@@ -75,7 +77,7 @@ export async function swapQuoteByInputToken(
   refresh: boolean
 ): Promise<SwapQuote> {
   return swapQuoteByToken(
-    whirlpool,
+    clmmpool,
     inputTokenMint,
     tokenAmount,
     slippageTolerance,
@@ -94,17 +96,17 @@ export async function swapQuoteByInputToken(
  * the defined output token amount.
  *
  * @category Quotes
- * @param whirlpool - Whirlpool to perform the swap on
+ * @param clmmpool - clmmpool to perform the swap on
  * @param outputTokenMint - PublicKey for the output token mint to swap into
  * @param tokenAmount - The maximum amount of output token to receive in this swap.
  * @param slippageTolerance - The amount of slippage to account for in this quote
- * @param programId - PublicKey for the Whirlpool ProgramId
+ * @param programId - PublicKey for the clmmpool ProgramId
  * @param fetcher - AccountFetcher object to fetch solana accounts
  * @param refresh - If true, fetcher would default to fetching the latest accounts
- * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end whirlpool states.
+ * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end clmmpool states.
  */
 export async function swapQuoteByOutputToken(
-  whirlpool: Clmmpool,
+  clmmpool: Clmmpool,
   outputTokenMint: Address,
   tokenAmount: u64,
   slippageTolerance: Percentage,
@@ -113,7 +115,7 @@ export async function swapQuoteByOutputToken(
   refresh: boolean
 ): Promise<SwapQuote> {
   return swapQuoteByToken(
-    whirlpool,
+    clmmpool,
     outputTokenMint,
     tokenAmount,
     slippageTolerance,
@@ -131,7 +133,7 @@ export async function swapQuoteByOutputToken(
  * @category Quotes
  * @param params - SwapQuote parameters
  * @param slippageTolerance - The amount of slippage to account for when generating the final quote.
- * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end whirlpool states.
+ * @returns a SwapQuote object with slippage adjusted SwapInput parameters & estimates on token amounts, fee & end clmmpool states.
  */
 export async function swapQuoteWithParams(
   fetcher: AccountFetcher,
@@ -157,7 +159,7 @@ export async function swapQuoteWithParams(
 }
 
 async function swapQuoteByToken(
-  whirlpool: Clmmpool,
+  clmmpool: Clmmpool,
   inputTokenMint: Address,
   tokenAmount: u64,
   slippageTolerance: Percentage,
@@ -167,9 +169,9 @@ async function swapQuoteByToken(
   fetcher: AccountFetcher,
   refresh: boolean
 ) {
-  const whirlpoolData = whirlpool.getData();
+  const clmmpoolData = clmmpool.getData();
   const swapMintKey = AddressUtil.toPubKey(inputTokenMint);
-  const swapTokenType = ClmmPoolUtil.getTokenType(whirlpoolData, swapMintKey);
+  const swapTokenType = ClmmPoolUtil.getTokenType(clmmpoolData, swapMintKey);
   invariant(
     !!swapTokenType,
     "swapTokenMint does not match any tokens on this pool"
@@ -178,10 +180,10 @@ async function swapQuoteByToken(
   const aToB = swapTokenType === amountSpecifiedTokenType;
 
   const tickArrays = await SwapUtils.getTickArrays(
-    whirlpoolData.currentTickIndex,
-    whirlpoolData.tickSpacing,
+    clmmpoolData.currentTickIndex,
+    clmmpoolData.tickSpacing,
     AddressUtil.toPubKey(programId),
-    whirlpool.getAddress(),
+    clmmpool.getAddress(),
     fetcher,
     refresh
   );
@@ -189,14 +191,11 @@ async function swapQuoteByToken(
   return swapQuoteWithParams(
     fetcher,
     {
-      clmmpoolData: whirlpoolData,
+      clmmpoolData: clmmpoolData,
       tokenAmount,
       aToB,
       byAmountIn: amountSpecifiedIsInput,
       sqrtPriceLimit: SwapUtils.getDefaultSqrtPriceLimit(aToB),
-      amountLimit: SwapUtils.getDefaultOtherAmountThreshold(
-        amountSpecifiedIsInput
-      ),
       tickArrays,
     },
     slippageTolerance

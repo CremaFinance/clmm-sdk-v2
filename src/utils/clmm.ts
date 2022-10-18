@@ -486,7 +486,7 @@ export function getAllClmmpools(connection: Connection) {
   const clmmpools = connection.getProgramAccounts(CLMMPOOL_PROGRAM_ID, {
     filters: [
       {
-        dataSize: 747,
+        dataSize: 748,
       },
     ],
   });

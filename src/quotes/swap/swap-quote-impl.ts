@@ -27,7 +27,6 @@ export function simulateSwapWithProFeeRate(
     tickArrays,
     tokenAmount,
     sqrtPriceLimit,
-    amountLimit,
     byAmountIn,
   } = params;
 
@@ -86,8 +85,10 @@ export function simulateSwapWithProFeeRate(
   }
 
   let isExceed = false;
-  if (swapResults.amountIn.lt(tokenAmount)) {
-    isExceed = true;
+  if (byAmountIn) {
+    isExceed = swapResults.amountIn.lt(tokenAmount);  
+  } else {
+    isExceed = swapResults.amountOut.lt(tokenAmount);  
   }
 
   return {
@@ -98,7 +99,6 @@ export function simulateSwapWithProFeeRate(
     isExceed,
     amount: tokenAmount,
     aToB,
-    amountLimit,
     byAmountIn,
   };
 }

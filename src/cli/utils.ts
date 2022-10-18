@@ -8,7 +8,7 @@ import { exit } from "process";
 import { PublicKey } from '@solana/web3.js';
 // import { Address } from "@project-serum/anchor";
 export const DEFAULT_SWAP_PROGRAM_ID =
-  new PublicKey("CcLs6shXAUPEi19SGyCeEHU9QhYAWzV2dRpPPNA4aRb7");
+  new PublicKey("CLMM9tUoggJu2wagPkkqs9eFG4BWhVBZWkP1qv3Sp7tR");
 export async function makeSDK() {
     const provider = loadProvider();
     const ctx = ClmmpoolContext.withProvider(provider, DEFAULT_SWAP_PROGRAM_ID);

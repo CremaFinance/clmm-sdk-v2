@@ -1,6 +1,6 @@
+import { Provider } from "@project-serum/anchor";
 import type {
   BroadcastOptions,
-  Provider,
   TransactionEnvelope,
   TransactionReceipt,
 } from "@saberhq/solana-contrib";

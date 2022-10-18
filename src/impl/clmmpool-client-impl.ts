@@ -23,7 +23,7 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
   async getPool(poolAddress: Address, refresh = false): Promise<Clmmpool> {
     const account = await this.ctx.fetcher.getPool(poolAddress, refresh);
     if (!account) {
-      throw new Error(`Unable to fetch Whirlpool at address at ${poolAddress}`);
+      throw new Error(`Unable to fetch clmmpool at address at ${poolAddress}`);
     }
     const tokenInfos:any = await getTokenMintInfos(
       this.ctx.fetcher,
@@ -57,7 +57,7 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
     ).filter((account): account is ClmmpoolData => !!account);
     if (accounts.length !== poolAddresses.length) {
       throw new Error(
-        `Unable to fetch all Whirlpools at addresses ${poolAddresses}`
+        `Unable to fetch all clmmpools at addresses ${poolAddresses}`
       );
     }
     const tokenMints = new Set<string>();

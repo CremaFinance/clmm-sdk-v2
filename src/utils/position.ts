@@ -349,17 +349,25 @@ export async function getAllPositions(
     }
   }
 
-  const positions: any = [];
+  const positionsAddrs: any = [];
   for (const p of positionsAddress) {
-    const position = await fetcher.getPosition(p.positionPublicKey, true);
-    if (position !== null) {
-      positions.push({
-        ...position,
-        ...p,
-      });
-    }
+    positionsAddrs.push(p.positionPublicKey);
   }
-  return positions;
+  const positions = await fetcher.getPositions(positionsAddrs, true);
+
+  const positionsWithNftandAddress = [];
+  for (const i in positionsAddress) {
+    if (!positions[i]) {
+      continue
+    }
+
+    positionsWithNftandAddress.push({
+      ...positions[i],
+      ...positionsAddress[i]
+    });
+  }
+
+  return positionsWithNftandAddress;
 }
 
 /** Private */

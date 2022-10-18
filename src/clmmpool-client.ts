@@ -13,6 +13,7 @@ import type {
   PositionData,
 } from "./types";
 import type { TokenAccountInfo, TokenInfo } from "./types/client-types";
+import { SwapInput } from "./ix";
 
 /**
  * Helper class to help interact with Clmmpool Accounts with a simpler interface.
@@ -177,7 +178,7 @@ export interface Clmmpool {
    * @param wallet - The wallet that tokens will be withdrawn and deposit into. If null, the ClmmpoolContext wallet is used.
    * @return a transaction that will perform the swap once executed.
    */
-  swap: (quote: SwapQuote, wallet?: PublicKey) => Promise<TransactionEnvelope>;
+  swap: (quote: SwapInput, wallet?: PublicKey) => Promise<TransactionEnvelope>;
 }
 
 /**

@@ -10,7 +10,7 @@ export const CLMMPOOLS_CONFIG = new PublicKey(
 );
 
 export const CLMMPOOL_PROGRAM_ID = new PublicKey(
-  "CcLs6shXAUPEi19SGyCeEHU9QhYAWzV2dRpPPNA4aRb7"
+  "CLMM9tUoggJu2wagPkkqs9eFG4BWhVBZWkP1qv3Sp7tR"
 );
 
 export const MINT_WRAPPER_PROGRAM_ID = new PublicKey(
@@ -18,25 +18,25 @@ export const MINT_WRAPPER_PROGRAM_ID = new PublicKey(
 );
 
 /**
- * The maximum tick index supported by the Whirlpool program.
+ * The maximum tick index supported by the clmmpool program.
  * @category Constants
  */
 export const MAX_TICK_INDEX = 443636;
 
 /**
- * The minimum tick index supported by the Whirlpool program.
+ * The minimum tick index supported by the clmmpool program.
  * @category Constants
  */
 export const MIN_TICK_INDEX = -443636;
 
 /**
- * The maximum sqrt-price supported by the Whirlpool program.
+ * The maximum sqrt-price supported by the clmmpool program.
  * @category Constants
  */
 export const MAX_SQRT_PRICE = "79226673515401279992447579055";
 
 /**
- * The minimum sqrt-price supported by the Whirlpool program.
+ * The minimum sqrt-price supported by the clmmpool program.
  * @category Constants
  */
 export const MIN_SQRT_PRICE = "4295048016";

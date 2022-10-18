@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { TransactionEnvelope } from "@saberhq/solana-contrib";
-import { getMintInfo, getTokenAccount } from "@saberhq/token-utils";
+import { getMintInfo, getTokenAccount } from "@cremafinance/token-utils";
 import { assert } from "chai";
 import Decimal from "decimal.js";
 

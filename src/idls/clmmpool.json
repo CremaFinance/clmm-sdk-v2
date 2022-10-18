@@ -1310,6 +1310,48 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "pauseClmmpool",
+      "accounts": [
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "protocolAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clmmpool",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unpauseClmmpool",
+      "accounts": [
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "protocolAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clmmpool",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -1434,6 +1476,10 @@
           {
             "name": "rewarderLastUpdatedTime",
             "type": "u64"
+          },
+          {
+            "name": "isPause",
+            "type": "bool"
           }
         ]
       }
@@ -1837,6 +1883,9 @@
           },
           {
             "name": "InvalidPartner"
+          },
+          {
+            "name": "InvalidClmmpoolStatus"
           }
         ]
       }
@@ -2357,6 +2406,16 @@
           "index": false
         },
         {
+          "name": "feeAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "protocolAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
           "name": "vaultAAmount",
           "type": "u64",
           "index": false
@@ -2403,6 +2462,16 @@
         },
         {
           "name": "refAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "feeAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "protocolAmount",
           "type": "u64",
           "index": false
         },

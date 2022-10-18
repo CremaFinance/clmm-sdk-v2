@@ -7,7 +7,7 @@ import type { SwapQuote } from "../../src";
 import type { Clmmpool } from "../../src/idls/clmmpool";
 import type { ClmmpoolData, TickData } from "../../src/types";
 import { TEST_TOKEN_PROGRAM_ID } from "./test-consts";
-import type { VaultAmounts } from "./whirlpools-test-utils";
+import type { VaultAmounts } from "./clmmpools-test-utils";
 
 /**
  * @category Math

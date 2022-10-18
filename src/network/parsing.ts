@@ -47,7 +47,7 @@ export class ParsableClmmpoolsConfig {
     try {
       return parseAnchorAccount(AccountName.ClmmConfig, data);
     } catch (e) {
-      console.error(`error while parsing WhirlpoolsConfig: ${e}`);
+      console.error(`error while parsing ClmmpoolsConfig: ${e}`);
       return null;
     }
   }
@@ -86,7 +86,7 @@ export class ParsableClmmpool {
     try {
       return parseAnchorAccount(AccountName.ClmmPool, data);
     } catch (e) {
-      console.error(`error while parsing Whirlpool: ${e}`);
+      console.error(`error while parsing clmmpool: ${e}`);
       return null;
     }
   }

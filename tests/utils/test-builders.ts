@@ -1,5 +1,5 @@
 // import * as anchor from "@project-serum/anchor";
-import { getOrCreateATA } from "@saberhq/token-utils";
+import { getOrCreateATA } from "@cremafinance/token-utils";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,

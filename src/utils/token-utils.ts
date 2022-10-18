@@ -2,7 +2,7 @@ import type { Provider } from "@cremafinance/solana-contrib";
 import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import { getATAAddress, getOrCreateATA } from "@cremafinance/token-utils";
 import type { AccountInfo } from "@solana/spl-token";
-import { AccountLayout, NATIVE_MINT, Token, u64 } from "@solana/spl-token";
+import { AccountLayout, NATIVE_MINT, Token, u64, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import type Decimal from "decimal.js";
 import invariant from "tiny-invariant";
@@ -58,16 +58,10 @@ export class TokenUtil {
   ): Promise<TransactionEnvelope> {
     invariant(amount.greaterThan(0));
     const tx = new TransactionEnvelope(provider, []);
-    const { address: ataAddress, instruction: ataInstruction } =
-      await getOrCreateATA({
-        provider: provider,
-        mint: NATIVE_MINT,
-        owner: provider.wallet.publicKey,
-        payer: provider.wallet.publicKey,
-      });
-    if (ataInstruction !== null) {
-      tx.instructions.push(ataInstruction);
-    }
+    const ataAddress = await getATAAddress({
+      mint: NATIVE_MINT,
+      owner: provider.wallet.publicKey,
+    });
     tx.instructions.push(
       SystemProgram.transfer({
         fromPubkey: provider.wallet.publicKey,
@@ -90,9 +84,9 @@ export class TokenUtil {
     });
     invariant(ataAddress.equals(checkAta), "Only allow close wrap SOL ata");
     const tx = Token.createCloseAccountInstruction(
+      TOKEN_PROGRAM_ID,
       ataAddress,
       dest || provider.wallet.publicKey,
-      provider.wallet.publicKey,
       provider.wallet.publicKey,
       []
     );
