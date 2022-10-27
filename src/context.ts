@@ -1,22 +1,21 @@
+import * as anchor from "@project-serum/anchor";
 import type { Idl } from "@project-serum/anchor";
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import type { Provider, Wallet } from "@cremafinance/solana-contrib";
-import { SolanaProvider } from "@cremafinance/solana-contrib";
-// import type { Wallet } from "@project-serum/anchor/dist/cjs/provider";
+import { Provider, SolanaProvider, Wallet } from "@cremafinance/solana-contrib";
 import type { ConfirmOptions, Connection, PublicKey } from "@solana/web3.js";
 
-import type { Clmmpool } from "./idls/clmmpool";
+import type { clmmpool } from "./idls/clmmpool";
 import ClmmpoolIDL from "./idls/clmmpool.json";
 import { AccountFetcher } from "./network";
+
 /**
- * @category Core
+ * The helpful class of clmmpool context.
  */
 export class ClmmpoolContext {
   readonly connection: Connection;
   readonly wallet: Wallet;
   readonly opts: ConfirmOptions;
-  readonly program: Program<Clmmpool>;
-  // readonly provider: AnchorProvider;
+  readonly program: Program<clmmpool>;
   readonly provider: Provider;
   readonly fetcher: AccountFetcher;
 
@@ -31,7 +30,6 @@ export class ClmmpoolContext {
     const provider = SolanaProvider.init({ connection, wallet, opts });
     const program = new Program(ClmmpoolIDL as Idl, programId, anchorProvider);
     return new ClmmpoolContext(
-      // anchorProvider,
       provider,
       anchorProvider.wallet,
       program,
@@ -41,12 +39,11 @@ export class ClmmpoolContext {
   }
 
   static fromWorkspace(
-    // provider: AnchorProvider,
     provider: Provider,
     program: Program,
     fetcher = new AccountFetcher(provider.connection),
     opts: ConfirmOptions = AnchorProvider.defaultOptions()
-  ) {
+  ):  ClmmpoolContext {
     return new ClmmpoolContext(
       provider,
       provider.wallet,
@@ -57,7 +54,6 @@ export class ClmmpoolContext {
   }
 
   static withProvider(
-    // provider: AnchorProvider,
     provider: Provider,
     programId: PublicKey,
     fetcher = new AccountFetcher(provider.connection),
@@ -68,7 +64,7 @@ export class ClmmpoolContext {
       provider.wallet,
       opts
     );
-    // const program = new Program(ClmmpoolIDL as Idl, programId, provider);
+
     const program = new Program(ClmmpoolIDL as Idl, programId, anchorProvider);
     return new ClmmpoolContext(
       provider,
@@ -80,7 +76,6 @@ export class ClmmpoolContext {
   }
 
   constructor(
-    // provider: AnchorProvider,
     provider: Provider,
     wallet: Wallet,
     program: Program,
@@ -90,11 +85,10 @@ export class ClmmpoolContext {
     this.connection = provider.connection;
     this.wallet = wallet;
     this.opts = opts;
+
     // It's a hack but it works on Anchor workspace *shrug*
-    this.program = program as unknown as Program<Clmmpool>;
+    this.program = program as unknown as Program<clmmpool>;
     this.provider = provider;
     this.fetcher = fetcher;
   }
-
-  // TODO: Add another factory method to build from on-chain IDL
 }

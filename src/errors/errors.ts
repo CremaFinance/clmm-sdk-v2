@@ -37,7 +37,6 @@ export class ClmmpoolsError extends Error {
     this.errorCode = errorCode;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isClmmpoolsErrorCode(e: any, code: ClmmpoolsErrorCode): boolean {
     return e instanceof ClmmpoolsError && e.errorCode === code;
   }

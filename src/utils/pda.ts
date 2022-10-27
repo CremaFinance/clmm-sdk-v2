@@ -3,7 +3,7 @@ import type { PublicKey } from "@solana/web3.js";
 
 import { TickMath } from "../math/tick";
 import { METADATA_PROGRAM_ADDRESS } from "../types";
-import { AddressUtil } from "../utils/address-util";
+import { AddressUtil, PDA } from "../utils/address-util";
 import { TickUtil } from "./tick";
 
 const CLMM_CONFIG_SEED = "clmmconfig";
@@ -14,20 +14,28 @@ const PDA_TICK_ARRAY_MAP_SEED = "tick_array_map";
 const PDA_FEE_TIER_SEED = "fee_tier";
 const PDA_PARTNER_SEED = "partner";
 const PDA_METADATA_SEED = "metadata";
+const PDA_CLMMPOOL_METADATA_SEED = "clmmpool_metadata";
 const PDA_EDITION_SEED = "edition";
 
 /**
  * @category PDA Utils
  */
 export class PDAUtil {
-  static getClmmConfigPDA(programId: PublicKey) {
+  /**
+   * Get clmm config pda.
+   * 
+   * @param programId 
+   * @returns 
+   */
+  static getClmmConfigPDA(programId: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
       [Buffer.from(CLMM_CONFIG_SEED)],
       programId
     );
   }
+
   /**
-   * Get clmmpool pda
+   * Get clmmpool pda.
    * @param programId
    * @param clmmConfigKey
    * @param tokenMintAKey
@@ -41,7 +49,7 @@ export class PDAUtil {
     tokenMintAKey: PublicKey,
     tokenMintBKey: PublicKey,
     tickSpacing: number
-  ) {
+  ): PDA {
     const [mintA, mintB] = tokenMintAKey.toBuffer() < tokenMintBKey.toBuffer() ? [tokenMintAKey, tokenMintBKey] : [tokenMintBKey, tokenMintAKey];
 
     return AddressUtil.findProgramAddress(
@@ -57,12 +65,13 @@ export class PDAUtil {
   }
 
   /**
-   * @category Program Derived Addresses
+   * Get position pda.
+   * 
    * @param programId
    * @param positionNFTMintKey
    * @returns
    */
-  static getPositionPDA(programId: PublicKey, positionNFTMintKey: PublicKey) {
+  static getPositionPDA(programId: PublicKey, positionNFTMintKey: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
       [Buffer.from(PDA_POSITION_SEED), positionNFTMintKey.toBuffer()],
       programId
@@ -70,11 +79,12 @@ export class PDAUtil {
   }
 
   /**
-   * @category Program Derived Addresses
+   * Get position mint key.
+   * 
    * @param positionMintKey
    * @returns
    */
-  static getPositionMetadataPDA(positionMintKey: PublicKey) {
+  static getPositionMetadataPDA(positionMintKey: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
       [
         Buffer.from(PDA_METADATA_SEED),
@@ -85,7 +95,13 @@ export class PDAUtil {
     );
   }
 
-  static getPositionEditionPDA(positionMintKey: PublicKey) {
+  /**
+   * Get opsition edition pda.
+   * 
+   * @param positionMintKey 
+   * @returns 
+   */
+  static getPositionEditionPDA(positionMintKey: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
       [
         Buffer.from(PDA_METADATA_SEED),
@@ -98,7 +114,8 @@ export class PDAUtil {
   }
 
   /**
-   * @category Program Derived Addresses
+   * Get tick array pda.
+   * 
    * @param programId
    * @param clmmpoolKey
    * @param arrayIndex
@@ -108,7 +125,7 @@ export class PDAUtil {
     programId: PublicKey,
     clmmpoolKey: PublicKey,
     arrayIndex: number
-  ) {
+  ): PDA {
     return AddressUtil.findProgramAddress(
       [
         Buffer.from(PDA_TICK_ARRAY_SEED),
@@ -121,15 +138,14 @@ export class PDAUtil {
 
   /**
    * Get tick array map pda.
-   * @category Program Derived Addresses
+   * 
    * @param programId
-   * @param clmmpoolAddress
-   *
+   * @param clmmpoolKey
    * @returns
    */
-  static getTickArrayMapPDA(programId: PublicKey, clmmpoolAddress: PublicKey) {
+  static getTickArrayMapPDA(programId: PublicKey, clmmpoolKey: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
-      [Buffer.from(PDA_TICK_ARRAY_MAP_SEED), clmmpoolAddress.toBuffer()],
+      [Buffer.from(PDA_TICK_ARRAY_MAP_SEED), clmmpoolKey.toBuffer()],
       programId
     );
   }
@@ -141,7 +157,6 @@ export class PDAUtil {
    * @param tickSpacing
    * @param clmmpool
    * @param programId
-   *
    * @returns
    */
   static getTickArrayFromTickIndexPDA(
@@ -149,7 +164,7 @@ export class PDAUtil {
     tickSpacing: number,
     clmmpool: PublicKey,
     programId: PublicKey
-  ) {
+  ): PDA {
     const arrayIndex = TickUtil.getArrayIndex(tickIndex, tickSpacing);
     return PDAUtil.getTickArrayPDA(
       AddressUtil.toPubKey(programId),
@@ -162,11 +177,10 @@ export class PDAUtil {
    * Get the PDA of the tick array containing tickIndex.
    * tickArrayOffset can be used to get neighboring tick arrays.
    *
-   * @param tickIndex
+   * @param sqrtPriceX64
    * @param tickSpacing
    * @param clmmpool
    * @param programId
-   *
    * @returns
    */
   static getTickArrayFromSqrtPricePDA(
@@ -174,7 +188,7 @@ export class PDAUtil {
     tickSpacing: number,
     clmmpool: PublicKey,
     programId: PublicKey
-  ) {
+  ): PDA {
     const tickIndex = TickMath.sqrtPriceX64ToTickIndex(sqrtPriceX64);
     return PDAUtil.getTickArrayFromTickIndexPDA(
       tickIndex,
@@ -195,7 +209,7 @@ export class PDAUtil {
     programId: PublicKey,
     clmmConfigKey: PublicKey,
     tickSpacing: number
-  ) {
+  ): PDA {
     return AddressUtil.findProgramAddress(
       [
         Buffer.from(PDA_FEE_TIER_SEED),
@@ -212,9 +226,25 @@ export class PDAUtil {
    * @param baseKey
    * @returns
    */
-  static getPartnerPDA(programId: PublicKey, baseKey: PublicKey) {
+  static getPartnerPDA(programId: PublicKey, baseKey: PublicKey): PDA {
     return AddressUtil.findProgramAddress(
       [Buffer.from(PDA_PARTNER_SEED), baseKey.toBuffer()],
+      programId
+    );
+  }
+
+  /**
+   * @category Get Program Derived Addresses
+   * @param programId
+   * @param clmmpoolKey
+   * @returns
+   */
+  static getClmmpoolMetadataPDA(programId: PublicKey, clmmpoolKey: PublicKey): PDA {
+    return AddressUtil.findProgramAddress(
+      [
+        Buffer.from(PDA_CLMMPOOL_METADATA_SEED),
+        clmmpoolKey.toBuffer()
+      ],
       programId
     );
   }

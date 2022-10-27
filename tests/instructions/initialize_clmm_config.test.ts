@@ -1,5 +1,5 @@
 import * as anchor from "@project-serum/anchor";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import assert from "assert";
 
 import type { InitClmmConfigParams } from "../../src";

@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseMessage = exports.loadProvider = exports.keypairFromFile = exports.confirmTx = void 0;
-const solana_contrib_1 = require("@saberhq/solana-contrib");
+const solana_contrib_1 = require("@cremafinance/solana-contrib");
 const web3_js_1 = require("@solana/web3.js");
 const fs = __importStar(require("fs"));
 const tiny_invariant_1 = __importDefault(require("tiny-invariant"));

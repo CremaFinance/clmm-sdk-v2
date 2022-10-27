@@ -1,6 +1,9 @@
 import { u64 } from "@solana/spl-token";
 import type { Decimal } from "decimal.js";
 
+/**
+ * Percentage - the util set for percentage struct.
+ */
 export class Percentage {
   readonly numerator: u64;
   readonly denominator: u64;
@@ -13,6 +16,12 @@ export class Percentage {
     this.denominator = denominator;
   }
 
+  /**
+   * Get the percentage of a number.
+   * 
+   * @param number 
+   * @returns 
+   */
   static fromDecimal(number: Decimal): Percentage {
     return Percentage.fromFraction(
       number.toDecimalPlaces(1).mul(10).toNumber(),
@@ -20,6 +29,13 @@ export class Percentage {
     );
   }
 
+  /**
+   * Get the percentage of a fraction.
+   * 
+   * @param numerator 
+   * @param denominator 
+   * @returns 
+   */
   static fromFraction(
     numerator: u64 | number,
     denominator: u64 | number

@@ -60,8 +60,6 @@ export class PositionImpl implements Position {
       owner: wallet
     })
 
-
-
     const tickUpper = this.data.tickUpperIndex  
     const tickLower = this.data.tickLowerIndex
     const tickArrayLower = PDAUtil.getTickArrayPDA(
@@ -102,8 +100,6 @@ export class PositionImpl implements Position {
       }
     }
     instructions.push(...tickArrayInstructions)
-
-    
 
     const liquidityInputWithFixedToken = {
       tokenA: tokenAMax,
@@ -202,6 +198,20 @@ export class PositionImpl implements Position {
     decreaseLiquidityInstructions.push(decreaseLiquidityIx)
     decreaseLiquidityInstructions.unshift(...accountATAs.instructions)
     
+    const instructions = []
+    if (
+      clmmpool.tokenA.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    if (
+      clmmpool.tokenB.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    decreaseLiquidityInstructions.push(...instructions)
     return new TransactionEnvelope(this.ctx.provider, decreaseLiquidityInstructions)
 
   }
@@ -255,6 +265,20 @@ export class PositionImpl implements Position {
 
     claimInstructions.push(cliamIx)
     claimInstructions.unshift(...accountATAs.instructions)
+    const instructions = []
+    if (
+      clmmpool.tokenA.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    if (
+      clmmpool.tokenB.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    claimInstructions.push(...instructions)
      return new TransactionEnvelope(this.ctx.provider, claimInstructions)
 
   }

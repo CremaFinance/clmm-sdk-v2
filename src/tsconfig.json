@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true
   },
-  "include": ["./**/*","./**/*.json","tests/"],
+  "include": ["./**/*","./**/*.json","tests/", "../tests/sim-swap.test.ts"],
   "exclude": ["cli/"],
   "typedocOptions": {
     "entryPoints": ["index.ts"],

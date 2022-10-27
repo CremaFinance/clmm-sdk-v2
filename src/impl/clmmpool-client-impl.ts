@@ -20,37 +20,39 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
     return this.ctx.fetcher;
   }
 
-  async getPool(poolAddress: Address, refresh = false): Promise<Clmmpool> {
+  // Default refresh pool info every time.
+  async getPool(poolAddress: Address, refresh = false): Promise<ClmmpoolImpl> {
     const account = await this.ctx.fetcher.getPool(poolAddress, refresh);
     if (!account) {
       throw new Error(`Unable to fetch clmmpool at address at ${poolAddress}`);
     }
-    const tokenInfos:any = await getTokenMintInfos(
+    const tokenInfos: any = await getTokenMintInfos(
       this.ctx.fetcher,
       account,
       refresh
     );
-    const vaultInfos:any = await getTokenVaultAccountInfos(
+    const vaultInfos: any = await getTokenVaultAccountInfos(
       this.ctx.fetcher,
       account,
       refresh
     );
       
-      return new ClmmpoolImpl(
-        this.ctx,
-        this.ctx.fetcher,
-        AddressUtil.toPubKey(poolAddress),
-        tokenInfos[0],
-        tokenInfos[1],
-        vaultInfos[0],
-        vaultInfos[1],
-        account
-      );
+    return new ClmmpoolImpl(
+      this.ctx,
+      this.ctx.fetcher,
+      AddressUtil.toPubKey(poolAddress),
+      tokenInfos[0],
+      tokenInfos[1],
+      vaultInfos[0],
+      vaultInfos[1],
+      account
+    );
   }
 
+  // Default refresh pools info every time.
   async getPools(
     poolAddresses: Address[],
-    refresh = false
+    refresh = true
   ): Promise<Clmmpool[]> {
     const accounts = (
       await this.ctx.fetcher.listPools(poolAddresses, refresh)
@@ -101,9 +103,10 @@ export class ClmmpoolClientImpl implements ClmmpoolClient {
     return clmmpools;
   }
 
+  // Default refresh position info every time.
   async getPosition(
     positionAddress: Address,
-    refresh = false
+    refresh = true
   ): Promise<Position> {
     const account = await this.ctx.fetcher.getPosition(
       positionAddress,

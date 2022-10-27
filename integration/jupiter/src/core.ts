@@ -13,6 +13,7 @@ export type Accounts = IdlAccounts<Clmmpool>;
 export type FeeTierData = Accounts["feeTier"];
 export type TickArrayData = Accounts["tickArray"];
 export type ClmmConfigData = Accounts["clmmConfig"];
+export type TickArrayMap = Accounts["tickArrayMap"];
 
 export class Instructions {
   constructor(

@@ -1,7 +1,6 @@
 // import { PublicKey } from "@solana/web3.js";
 // import { PublicKey } from "@solana/web3.js";
 import { Command } from "commander";
-// import Decimal from "decimal.js";
 // import { IncreaseLiquidityInput } from "../types";
 import { catchFinallyExit, makeSDK } from "./utils";
 import { ClmmPoolUtil, getAllClmmpools, IncreaseLiquidityInput } from "..";

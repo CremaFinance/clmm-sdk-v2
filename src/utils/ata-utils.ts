@@ -16,10 +16,7 @@ import { TokenUtil } from "./token-utils";
 
 /**
  * Resolve or create ata.
- * IMPORTANT: wrappedSolAmountIn should only be used for input/source token that
- *            could be SOL. This is because when SOL is the output, it is the end
- *            destination, and thus does not need to be wrapped with an amount.
- *
+ * 
  * @param connection Solana connection class
  * @param ownerAddress The user's public key
  * @param tokenMint Token mint address
@@ -52,9 +49,6 @@ type ResolvedTokenAddressRequest = {
 
 /**
  * Resolve or create atas.
- * IMPORTANT: wrappedSolAmountIn should only be used for input/source token that
- *            could be SOL. This is because when SOL is the output, it is the end
- *            destination, and thus does not need to be wrapped with an amount.
  *
  * @param connection Solana connection class
  * @param ownerAddress The user's public key

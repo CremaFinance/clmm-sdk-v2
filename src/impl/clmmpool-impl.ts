@@ -1,12 +1,12 @@
-import { Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { Address, BN } from "@project-serum/anchor";
 import { TransactionEnvelope } from "@cremafinance/solana-contrib";
-import { getOrCreateATA, getOrCreateATAs } from "@cremafinance/token-utils"
+import { getOrCreateATAs } from "@cremafinance/token-utils"
 import type { Clmmpool } from "../clmmpool-client";
 import type { ClmmpoolContext } from "../context";
 import type { AccountFetcher } from "../network";
-import type { ClmmpoolData, DecreaseLiquidityInput, IncreaseLiquidityInput, TokenAccountInfo } from "../types";
+import type { ClmmpoolData, DecreaseLiquidityInput, IncreaseLiquidityInput, TickData, TokenAccountInfo } from "../types";
 import { getTokenVaultAccountInfos } from "./util";
 import invariant from "tiny-invariant";
 import { PDAUtil } from "../utils/pda";
@@ -14,16 +14,16 @@ export const INIT_KEY = new PublicKey("11111111111111111111111111111111");
 import {
   ClmmpoolIx, SwapInput
 } from "../ix";
-import { POSITION_NFT_UPDATE_AUTHORITY } from "../types/constants";
-import { SwapQuote } from "../quotes/public/swap"
+import { POSITION_NFT_UPDATE_AUTHORITY, TICK_ARRAY_MAP_MAX_BIT_INDEX, TICK_ARRAY_MAP_MIN_BIT_INDEX, TICK_ARRAY_SIZE,CLMMPOOL_PROGRAM_ID } from "../types/constants";
 import { AddressUtil } from "../utils/address-util"
-import { SwapUtils } from "../utils/swap"
+
 import { TokenUtil } from "../utils/token-utils"
 import { TickArray, TokenInfo } from '../types/client-types';
-import { createTickArrayRange, TickArrayUtil, TickUtil } from "../utils/tick";
+import { TickArrayUtil, TickUtil } from "../utils/tick";
 import { Decimal } from "decimal.js";
-import { TickArrayIndex } from '../quotes/swap/tick-array-index';
-
+import { computeSwap } from "../math/clmm";
+import type { u64 } from "@solana/spl-token";
+import { SwapUtils } from "../math";
 
 export interface PendingOpenPosition {
   positionId: PublicKey;
@@ -32,10 +32,33 @@ export interface PendingOpenPosition {
   tx: TransactionEnvelope;
 }
 
+ export type SwapQuoteParam = {
+  clmmpoolData: ClmmpoolData;
+  tokenAmount: u64;
+  sqrtPriceLimit: BN;
+  aToB: boolean;
+  byAmountIn: boolean;
+  tickArrays: TickArray[];
+};
+
+export type SwapQuote = {
+  estimatedAmountIn: u64;
+  estimatedAmountOut: u64;
+  estimatedEndSqrtPrice: BN;
+  estimatedFeeAmount: u64;
+  isExceed: boolean;
+  extraComputeLimit: number;
+  aToB: boolean;
+  byAmountIn: boolean;
+  amount: BN;
+}
 
 export class ClmmpoolImpl implements Clmmpool {
+  tickArrays: TickArray[];
   private data: ClmmpoolData;
-  constructor(
+  private ticks: TickData[];
+  private refreshTime: Date;
+  constructor( 
     readonly ctx: ClmmpoolContext,
     readonly fetcher: AccountFetcher,
     readonly address: PublicKey,
@@ -46,6 +69,9 @@ export class ClmmpoolImpl implements Clmmpool {
     data: ClmmpoolData
   ) {
     this.data = data;
+    this.ticks = [];
+    this.tickArrays = [];
+    this.refreshTime = new Date();
   }
 
   getAddress(): PublicKey {
@@ -244,12 +270,10 @@ export class ClmmpoolImpl implements Clmmpool {
 
   }
 
-
   async closePosition(liquidityInput: DecreaseLiquidityInput, positionId: PublicKey, positionNftMint: PublicKey, swapKey: PublicKey) {
     await this.refresh()
     return this.getClosePositionIx(liquidityInput, positionId, positionNftMint, swapKey)
   }
-
 
   private async getClosePositionIx(liquidityInput: DecreaseLiquidityInput, positionId: PublicKey, positionNftMint: PublicKey, swapKey: PublicKey) {
     const position = await this.fetcher.getPosition(positionId)
@@ -363,7 +387,21 @@ export class ClmmpoolImpl implements Clmmpool {
       }
     }
 
+    const instructions= []
 
+    if (
+      clmmpool.tokenA.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenA);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    if (
+      clmmpool.tokenB.equals(NATIVE_MINT)
+    ) {
+      const unwrapSOLInstructions = await TokenUtil.unwrapSOL(this.ctx.provider, accountATAs.accounts.tokenB);
+      instructions.push(...unwrapSOLInstructions.instructions);
+    }
+    
     const positionEdition = PDAUtil.getPositionEditionPDA(positionNftMint).publicKey
 
     const closePositionIx = new TransactionEnvelope(this.ctx.provider, [
@@ -379,7 +417,8 @@ export class ClmmpoolImpl implements Clmmpool {
         positionAta: positionAta.accounts.positionAddress,
         positionMetadataAccount: metadataPda.publicKey,
         positionEdition
-      })
+      }),
+      ...instructions
     ])
     return closePositionIx
   }
@@ -388,6 +427,7 @@ export class ClmmpoolImpl implements Clmmpool {
     await this.refresh();
     return this.getInitTickArrayForTicks(arrayIndex, tickArrayPda)
   }
+
   private async getInitTickArrayForTicks(arrayIndex: number, tickArrayPda: PublicKey) {
     const createTickArrayIx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.createTickArrayIx(this.ctx.program, {
       arrayIndex: TickUtil.getArrayIndex(arrayIndex, this.data.tickSpacing),
@@ -398,11 +438,153 @@ export class ClmmpoolImpl implements Clmmpool {
     return createTickArrayIx
   }
 
-  async swap(quote: SwapInput, sourceWallet?: Address): Promise<TransactionEnvelope> {
+  async createTickArrayRange(
+    a2b: boolean
+  ): Promise<PublicKey[]> {
+    const clmmpool = this.getAddress();
+    const tickArrayMapAddr = PDAUtil.getTickArrayMapPDA(
+      CLMMPOOL_PROGRAM_ID,
+      clmmpool
+    ).publicKey;
+    const tickArrayMap = await this.fetcher.getTickArrayMap(
+      tickArrayMapAddr,
+      true
+    );
+    const tickArrays: PublicKey[] = [];
+    const array_index = TickUtil.getArrayIndex(this.data.currentTickIndex, this.data.tickSpacing);
+    invariant(
+      array_index < TICK_ARRAY_MAP_MAX_BIT_INDEX &&
+        array_index >= TICK_ARRAY_MAP_MIN_BIT_INDEX,
+      "Invalid tick array bit"
+    );
+    invariant(tickArrayMap !== null, "The tick array map is null");
+
+    let array_indexs: boolean[] = [];
+    for (let index = 0; index < 868; index++) {
+      let word: number = tickArrayMap.bitmap[index];
+      for (let shift = 0; shift < 8; shift++) {
+        if (((word >> shift) & 0x01) > 0) {
+          array_indexs.push(true);
+        } else {
+          array_indexs.push(false);
+        }
+      }
+    }
+
+    const array_count = 3;
+    if (a2b) {
+      for (
+        let index = array_index;
+        index >= TICK_ARRAY_MAP_MIN_BIT_INDEX;
+        index--
+      ) {
+        if (array_indexs[index]) {
+          const tickArray_i = PDAUtil.getTickArrayPDA(CLMMPOOL_PROGRAM_ID, clmmpool, index);
+          tickArrays.push(tickArray_i.publicKey);
+        }
+        if (tickArrays.length >= array_count) {
+          break;
+        }
+      }
+    } else {
+      for (
+        let index = array_index;
+        index < TICK_ARRAY_MAP_MAX_BIT_INDEX;
+        index++
+      ) {
+        if (array_indexs[index]) {
+          const tickArray_i = PDAUtil.getTickArrayPDA(CLMMPOOL_PROGRAM_ID, clmmpool, index);
+          tickArrays.push(tickArray_i.publicKey);
+        }
+        if (tickArrays.length >= array_count) {
+          break;
+        }
+      }
+    }
+
+    return tickArrays;
+  }
+
+  getAllTicksFromTickArrays(
+    a2b: boolean,
+  ): TickData[] {
+    const ticks: TickData[] = [];
+    for (let i = 0; i < this.tickArrays.length; i++) {
+      const tickArray: any = this.tickArrays[i];
+      if (a2b) {
+        for (let j = TICK_ARRAY_SIZE - 1; j >= 0; j--) {
+          if (tickArray.data.ticks[j].isInitialized) {
+            ticks.push(tickArray.data.ticks[j]);
+          }
+        }
+      } else {
+        for (let j = 0; j < TICK_ARRAY_SIZE; j++) {
+          if (tickArray.data.ticks[j].isInitialized) {
+            ticks.push(tickArray.data.ticks[j]);
+          }
+        }
+      }
+    }
+
+    return ticks;
+  }
+
+  async simulateSwap(a2b: boolean, byAmountIn: boolean, amount: BN): Promise<SwapQuote> {
+    const tickArraysAddr = await this.createTickArrayRange(a2b);
+
+    //If interval time greater than 5 s, then refresh.
+    const nowTime = new Date();
+    const refreshTimeInterval = nowTime.getTime() - this.refreshTime.getTime();
+    const refresh = refreshTimeInterval > 1000 * 5 ? true : false;
+    this.refreshTime = refresh ? nowTime : this.refreshTime;
+
+    const tickArrays = await this.fetcher.listTickArrays(tickArraysAddr, refresh);
+    for (let i = 0; i < tickArrays.length; i++) {
+      this.tickArrays.push({
+        address: tickArraysAddr[i],
+        data: tickArrays[i],
+      })
+    }
+
+    this.ticks = this.getAllTicksFromTickArrays(a2b);
+
+    const swapResult = computeSwap(a2b, byAmountIn, amount, this.data, this.ticks);
+
+    let isExceed = false;
+    if (byAmountIn) {
+      isExceed = swapResult.amountIn.lt(amount);
+    } else {
+      isExceed = swapResult.amountOut.lt(amount);
+    }
+
+    let extraComputeLimit = 0;
+    if (swapResult.crossTickNum > 6 && swapResult.crossTickNum < 40) {
+      extraComputeLimit = 22000 * (swapResult.crossTickNum - 6);
+    }
+
+    if (swapResult.crossTickNum > 40) {
+      isExceed = true;
+    }
+
+    return {
+      estimatedAmountIn: swapResult.amountIn,
+      estimatedAmountOut: swapResult.amountOut,
+      estimatedEndSqrtPrice: swapResult.nextSqrtPrice,
+      estimatedFeeAmount: swapResult.feeAmount,
+      isExceed,
+      extraComputeLimit,
+      amount,
+      aToB: a2b,
+      byAmountIn,
+    }
+  }
+
+  // `swap` provide an interface to generate a transaction of swap .
+  // extra_compute_limit: default is false, if you control compute unit by your self, you can ignore it.
+  async swap(quote: SwapInput, sourceWallet?: Address, extra_compute_limit?: boolean): Promise<TransactionEnvelope> {
     const sourceWalletKey = sourceWallet
       ? AddressUtil.toPubKey(sourceWallet)
       : this.ctx.wallet.publicKey;
-    // return this.getSwapTx(quote, sourceWalletKey);
 
     const instructions: TransactionInstruction[] = [];
     const clmmpool = this.data;
@@ -415,7 +597,18 @@ export class ClmmpoolImpl implements Clmmpool {
       owner: sourceWalletKey
     })
     instructions.push(...accountATAs.instructions);
-    const swapTx = await this.getSwapTx(quote, sourceWalletKey, accountATAs.accounts.tokenA, accountATAs.accounts.tokenB)
+    const swapTx = await this.getSwapTx(quote, sourceWalletKey, accountATAs.accounts.tokenA, accountATAs.accounts.tokenB);
+    
+    if (extra_compute_limit === true) {
+      // Use new compute limit replace default limit
+      if (quote.extraComputeLimit !== 0) {
+        const extraComputeLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ 
+          units: 200000 + quote.extraComputeLimit,
+        });  
+        instructions.push(extraComputeLimitIx)
+      }
+    }
+
     swapTx.instructions.unshift(...instructions);
 
     return swapTx;
@@ -427,8 +620,7 @@ export class ClmmpoolImpl implements Clmmpool {
     const tickArrayMap = PDAUtil.getTickArrayMapPDA(this.ctx.program.programId, this.address)
 
     const sqrtPriceLimit = SwapUtils.getDefaultSqrtPriceLimit(input.aToB)
-    const tickArrayIndex = TickUtil.getArrayIndex(this.data.currentTickIndex, this.data.tickSpacing)
-    const remainAccount = await createTickArrayRange(this.ctx, this.ctx.program.programId ,this.address, tickArrayIndex, 0, input.aToB)
+    const remainAccount = await this.createTickArrayRange(input.aToB)
     
     const tx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.swapIx(this.ctx.program, {
       aToB: input.aToB,
@@ -480,12 +672,12 @@ export class ClmmpoolImpl implements Clmmpool {
   }
 
   private async refresh() {
-    const account = await this.fetcher.getPool(this.address, true);
-    if (account) {
+    const clmmpool = await this.fetcher.getPool(this.address, true);
+    if (clmmpool) {
       // const rewardInfos = await getRewardInfos(this.fetcher, account, true);
       const [tokenVaultAInfo, tokenVaultBInfo] =
-        await getTokenVaultAccountInfos(this.fetcher, account, true);
-      this.data = account;
+        await getTokenVaultAccountInfos(this.fetcher, clmmpool, true);
+      this.data = clmmpool;
       if (tokenVaultAInfo) {
         this.tokenVaultAInfo = tokenVaultAInfo;
       }
@@ -493,9 +685,6 @@ export class ClmmpoolImpl implements Clmmpool {
       if (tokenVaultBInfo) {
         this.tokenVaultBInfo = tokenVaultBInfo;
       }
-
-      // this.rewardInfos = rewardInfos;
     }
   }
-
 }

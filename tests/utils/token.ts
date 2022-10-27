@@ -1,7 +1,7 @@
 import type { BN } from "@project-serum/anchor";
 import { web3 } from "@project-serum/anchor";
-import type { Provider, TransactionReceipt } from "@saberhq/solana-contrib";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import type { Provider, TransactionReceipt } from "@cremafinance/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import type { AuthorityType } from "@solana/spl-token";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,

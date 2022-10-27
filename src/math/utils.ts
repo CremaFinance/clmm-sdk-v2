@@ -1,40 +1,22 @@
 import { BN } from "@project-serum/anchor";
-import Decimal from "decimal.js";
+import Decimal from "../utils/decimal";
 
 import { ClmmpoolsError, MathErrorCode } from "../errors/errors";
 
-/**
- * @category Math
- */
 export const ZERO = new BN(0);
 
-/**
- * @category Math
- */
 export const ONE = new BN(1);
 
-/**
- * @category Math
- */
 export const TWO = new BN(2);
 
-/**
- * @category Math
- */
 export const U128 = TWO.pow(new BN(128));
 
-/**
- * @category Math
- */
 export const U64_MAX = TWO.pow(new BN(64)).sub(ONE);
 
-/**
- * @category Math
- */
 export const U128_MAX = TWO.pow(new BN(128)).sub(ONE);
 
 /**
- * @category Math
+ * @category MathUtil
  */
 export class MathUtil {
   static toX64_BN(num: BN): BN {

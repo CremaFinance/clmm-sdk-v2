@@ -1,7 +1,7 @@
 import type { BN } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import type { TransactionReceipt } from "@saberhq/solana-contrib";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import type { TransactionReceipt } from "@cremafinance/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import type { Keypair, PublicKey } from "@solana/web3.js";
 
 import { TickSpacing } from ".";

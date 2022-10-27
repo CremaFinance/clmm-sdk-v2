@@ -4,11 +4,9 @@ import type { PublicKey } from "@solana/web3.js";
 
 import type { ClmmpoolContext } from "./context";
 import type { AccountFetcher } from "./network";
-import type { SwapQuote } from "./quotes";
 import type {
   ClmmpoolData,
   DecreaseLiquidityInput,
-  // DecreaseLiquidityInput,
   IncreaseLiquidityInput,
   PositionData,
 } from "./types";
@@ -16,9 +14,7 @@ import type { TokenAccountInfo, TokenInfo } from "./types/client-types";
 import { SwapInput } from "./ix";
 
 /**
- * Helper class to help interact with Clmmpool Accounts with a simpler interface.
- *
- * @category Core
+ * The helper class to help interact with Clmmpool Accounts with a simpler interface.
  */
 export interface ClmmpoolClient {
   /**
@@ -178,7 +174,7 @@ export interface Clmmpool {
    * @param wallet - The wallet that tokens will be withdrawn and deposit into. If null, the ClmmpoolContext wallet is used.
    * @return a transaction that will perform the swap once executed.
    */
-  swap: (quote: SwapInput, wallet?: PublicKey) => Promise<TransactionEnvelope>;
+  swap: (quote: SwapInput, wallet?: PublicKey, extra_compute_limit?: boolean) => Promise<TransactionEnvelope>;
 }
 
 /**

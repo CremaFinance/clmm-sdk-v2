@@ -17,7 +17,7 @@ export type ResolvedTokenAddressInstruction = {
 } & Instruction;
 
 /**
- * @category EMPTY_INSTRUCTION
+ * @category ResolvedTokenAddressInstruction
  *
  * @param wallet    wallet address
  * @param amountIn  token amountIn

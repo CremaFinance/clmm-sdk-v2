@@ -8,7 +8,7 @@ import {
 import type { PublicKey } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 import type BN from "bn.js";
-import Decimal from "decimal.js";
+import Decimal from "../../src/utils/decimal";
 
 import type {
   CreateClmmpoolParams,

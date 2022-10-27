@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.transfer = exports.setAuthority = exports.approveToken = exports.getTokenBalance = exports.createAndMintToAssociatedTokenAccount = exports.createAndMintToTokenAccount = exports.mintToByAuthority = exports.createAssociatedTokenAccount = exports.createTokenAccount = exports.createMintInstructions = exports.createMint = void 0;
 const anchor_1 = require("@project-serum/anchor");
-const solana_contrib_1 = require("@saberhq/solana-contrib");
+const solana_contrib_1 = require("@cremafinance/solana-contrib");
 const spl_token_1 = require("@solana/spl-token");
 const ata_utils_1 = require("../../src/utils/ata-utils");
 const test_consts_1 = require("./test-consts");

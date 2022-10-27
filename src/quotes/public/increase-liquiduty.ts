@@ -20,10 +20,9 @@ import {
   getTokenBFromLiquidity,
   PositionStatus,
   PositionUtil,
-} from "../../utils/position";
+} from "../../math/position";
 
 /**
- * @category Quotes
  * @param inputTokenAmount - The amount of input tokens to deposit.
  * @param inputTokenMint - The mint of the input token the user would like to deposit.
  * @param tokenMintA - The mint of tokenA in the clmmpool the user is depositing into.
@@ -48,7 +47,6 @@ export type IncreaseLiquidityQuoteParam = {
 
 /**
  * Return object from increase liquidity quote functions.
- * @category Quotes
  */
 export type IncreaseLiquidityQuote = IncreaseLiquidityInput & {
   tokenEstA: u64;
@@ -58,7 +56,6 @@ export type IncreaseLiquidityQuote = IncreaseLiquidityInput & {
 /**
  * Get an estimated quote on the maximum tokens required to deposit based on a specified input token amount.
  *
- * @category Quotes
  * @param inputTokenAmount - The amount of input tokens to deposit.
  * @param inputTokenMint - The mint of the input token the user would like to deposit.
  * @param tickLower - The lower index of the position that we are withdrawing from.
@@ -74,7 +71,7 @@ export function increaseLiquidityQuoteByInputToken(
   tickUpper: number,
   slippageTolerance: Percentage,
   clmmpool: Clmmpool
-) {
+): IncreaseLiquidityQuote {
   const data = clmmpool.getData();
   const tokenAInfo = clmmpool.getTokenAInfo();
   const tokenBInfo = clmmpool.getTokenBInfo();
@@ -90,6 +87,10 @@ export function increaseLiquidityQuoteByInputToken(
       inputTokenInfo.decimals
     ),
     inputTokenMint: inputMint,
+    tokenA: data.tokenA,
+    tokenB: data.tokenB,
+    currentSqrtPrice: data.currentSqrtPrice,
+    currentTickIndex: data.currentTickIndex,
     tickLowerIndex: TickMath.getInitializableTickIndex(
       tickLower,
       data.tickSpacing
@@ -99,14 +100,12 @@ export function increaseLiquidityQuoteByInputToken(
       data.tickSpacing
     ),
     slippageTolerance,
-    ...data,
   });
 }
 
 /**
  * Get an estimated quote on the maximum tokens required to deposit based on a specified input token amount.
  *
- * @category Quotes
  * @param param IncreaseLiquidityQuoteParam
  * @returns An IncreaseLiquidityInput object detailing the required token amounts & liquidity values to use when calling increase-liquidity-ix.
  */
@@ -145,8 +144,12 @@ export function increaseLiquidityQuoteByInputTokenWithParams(
   }
 }
 
-/*** Private ***/
-
+/**
+ * Get 
+ * 
+ * @param param 
+ * @returns 
+ */
 function quotePositionBelowRange(
   param: IncreaseLiquidityQuoteParam
 ): IncreaseLiquidityQuote {

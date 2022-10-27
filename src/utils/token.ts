@@ -40,11 +40,10 @@ export const syncNativeInstructionData = struct<SyncNativeInstructionData>([
 ]);
 
 /**
- * Construct a SyncNative instruction
+ * Construct a SyncNative instruction.
  *
  * @param account   Native account to sync lamports from
  * @param programId SPL Token program account
- *
  * @return Instruction to add to a transaction
  */
 export function createSyncNativeInstruction(
@@ -60,11 +59,10 @@ export function createSyncNativeInstruction(
 }
 
 /**
- * Return balance of a native account
+ * Return balance of a native account.
  *
  * @param provider  Solana provider
  * @param vault     Token account to get balance of
- *
  * @return Instruction to add to a transaction
  */
 export async function getTokenBalance(

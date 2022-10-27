@@ -1,6 +1,6 @@
 {
   "name": "@cremafinance/crema-sdk-v2",
-  "version": "1.0.1",
+  "version": "1.0.20",
   "scripts": {
     "idl:generate": "./scripts/parse-idls.sh && ./scripts/generate-idl-types.sh",
     "lint:fix": "eslint --fix --ext .ts --ignore-path .gitignore .",

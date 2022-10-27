@@ -1,6 +1,6 @@
 import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import * as anchor from "@project-serum/anchor";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
@@ -9,7 +9,7 @@ import {
 import type { PublicKey } from "@solana/web3.js";
 import { Keypair } from "@solana/web3.js";
 import { assert } from "chai";
-import Decimal from "decimal.js";
+import Decimal from "../../src/utils/decimal";
 
 import type { CreateClmmpoolParams } from "../../src";
 import { ClmmpoolContext, ClmmpoolIx } from "../../src";

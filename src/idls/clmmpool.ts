@@ -1,4 +1,4 @@
-export type Clmmpool = {
+export type clmmpool = {
   "version": "0.1.0",
   "name": "clmmpool",
   "instructions": [
@@ -1133,6 +1133,11 @@ export type Clmmpool = {
           "isSigner": true
         },
         {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "clmmpool",
           "isMut": true,
           "isSigner": false
@@ -1185,6 +1190,11 @@ export type Clmmpool = {
           "name": "rewarderAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "clmmpool",
@@ -1352,6 +1362,56 @@ export type Clmmpool = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "createClmmpoolMetadata",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpoolMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocolAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1379,6 +1439,34 @@ export type Clmmpool = {
           {
             "name": "createPoolAuthority",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "clmmpoolMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "clmmpool",
+            "type": "publicKey"
+          },
+          {
+            "name": "positionNums",
+            "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -1886,6 +1974,9 @@ export type Clmmpool = {
           },
           {
             "name": "InvalidClmmpoolStatus"
+          },
+          {
+            "name": "InvalidClmmpoolMetadataAccount"
           }
         ]
       }
@@ -2082,6 +2173,21 @@ export type Clmmpool = {
         },
         {
           "name": "tokenB",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CreateClmmpoolMetadataEvent",
+      "fields": [
+        {
+          "name": "clmmpool",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "clmmpoolMetadata",
           "type": "publicKey",
           "index": false
         }
@@ -2605,7 +2711,7 @@ export type Clmmpool = {
   ]
 };
 
-export const IDL: Clmmpool = {
+export const IDL: clmmpool = {
   "version": "0.1.0",
   "name": "clmmpool",
   "instructions": [
@@ -3740,6 +3846,11 @@ export const IDL: Clmmpool = {
           "isSigner": true
         },
         {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "clmmpool",
           "isMut": true,
           "isSigner": false
@@ -3792,6 +3903,11 @@ export const IDL: Clmmpool = {
           "name": "rewarderAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "clmmpool",
@@ -3959,6 +4075,56 @@ export const IDL: Clmmpool = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "createClmmpoolMetadata",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpoolMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocolAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -3986,6 +4152,34 @@ export const IDL: Clmmpool = {
           {
             "name": "createPoolAuthority",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "clmmpoolMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "clmmpool",
+            "type": "publicKey"
+          },
+          {
+            "name": "positionNums",
+            "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -4493,6 +4687,9 @@ export const IDL: Clmmpool = {
           },
           {
             "name": "InvalidClmmpoolStatus"
+          },
+          {
+            "name": "InvalidClmmpoolMetadataAccount"
           }
         ]
       }
@@ -4689,6 +4886,21 @@ export const IDL: Clmmpool = {
         },
         {
           "name": "tokenB",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CreateClmmpoolMetadataEvent",
+      "fields": [
+        {
+          "name": "clmmpool",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "clmmpoolMetadata",
           "type": "publicKey",
           "index": false
         }

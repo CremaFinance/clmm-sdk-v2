@@ -2,9 +2,6 @@ import type { Address } from "@project-serum/anchor";
 import { translateAddress, utils } from "@project-serum/anchor";
 import type { PublicKey } from "@solana/web3.js";
 
-/**
- * @category PDA Util
- */
 export type PDA = { publicKey: PublicKey; bump: number };
 
 /**

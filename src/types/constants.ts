@@ -70,7 +70,7 @@ export const FEE_RATE_DENOMINATOR = new BN(1_000_000);
  * The max and min number of tick arrays that tick array map holds.
  * @category Constants
  */
-export const TICK_ARRAY_MAP_MAX_BIT_INDEX = 434 * 8 - 1;
+export const TICK_ARRAY_MAP_MAX_BIT_INDEX = 868 * 8 - 1;
 export const TICK_ARRAY_MAP_MIN_BIT_INDEX = 0;
 
 export const MAX_TICK_ARRAY = 3;

@@ -1133,6 +1133,11 @@
           "isSigner": true
         },
         {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "clmmpool",
           "isMut": true,
           "isSigner": false
@@ -1185,6 +1190,11 @@
           "name": "rewarderAuthority",
           "isMut": false,
           "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "clmmpool",
@@ -1352,6 +1362,56 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "createClmmpoolMetadata",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "clmmConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpool",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clmmpoolMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "protocolAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1379,6 +1439,34 @@
           {
             "name": "createPoolAuthority",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClmmpoolMetadata",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "clmmpool",
+            "type": "publicKey"
+          },
+          {
+            "name": "positionNums",
+            "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -1886,6 +1974,9 @@
           },
           {
             "name": "InvalidClmmpoolStatus"
+          },
+          {
+            "name": "InvalidClmmpoolMetadataAccount"
           }
         ]
       }
@@ -2082,6 +2173,21 @@
         },
         {
           "name": "tokenB",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CreateClmmpoolMetadataEvent",
+      "fields": [
+        {
+          "name": "clmmpool",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "clmmpoolMetadata",
           "type": "publicKey",
           "index": false
         }

@@ -61,12 +61,6 @@ type GetMultipleAccountsResponse = {
   };
 };
 
-/**
- * Data access layer to access clmmpool related accounts
- * Includes internal cache that can be refreshed by the client.
- *
- * @category Core
- */
 export class AccountFetcher {
   private readonly connection: Connection;
   private readonly _cache: Record<string, CachedContent<CachedValue>> = {};
@@ -79,8 +73,6 @@ export class AccountFetcher {
     this.connection = connection;
     this._cache = cache ?? {};
   }
-
-  /*** Public Methods ***/
 
   /**
    * Retrieve minimum balance for rent exemption of a Token Account;
@@ -104,12 +96,12 @@ export class AccountFetcher {
    * Retrieve a cached clmmpool account. Fetch from rpc on cache miss.
    *
    * @param address clmmpool address
-   * @param refresh force cache refresh
+   * @param refresh force cache refresh, default true
    * @returns clmmpool account
    */
   async getPool(
     address: Address,
-    refresh = false
+    refresh = true
   ): Promise<ClmmpoolData | null> {
     return this.get(AddressUtil.toPubKey(address), ParsableClmmpool, refresh);
   }
@@ -118,19 +110,26 @@ export class AccountFetcher {
    * Retrieve a cached position account. Fetch from rpc on cache miss.
    *
    * @param address position address
-   * @param refresh force cache refresh
+   * @param refresh force cache refresh, default true
    * @returns position account
    */
   async getPosition(
     address: Address,
-    refresh = false
+    refresh = true
   ): Promise<PositionData | null> {
     return this.get(AddressUtil.toPubKey(address), ParsablePosition, refresh);
   }
 
+    /**
+   * Retrieve cached position accounts. Fetch from rpc on cache miss.
+   *
+   * @param address position address
+   * @param refresh force cache refresh, default true
+   * @returns position account
+   */
   async getPositions(
     address: Address[],
-    refresh = false
+    refresh = true
   ): Promise<(PositionData | null)[]> {
     return this.list(AddressUtil.toPubKeys(address), ParsablePosition, refresh);
   }
@@ -341,7 +340,7 @@ export class AccountFetcher {
   /**
    * Update the cached value of all entities currently in the cache.
    * Uses batched rpc request for network efficient fetch.
-   */
+  */
   async refreshAll(): Promise<void> {
     const addresses: string[] = Object.keys(this._cache);
     const data = await this.bulkRequest(addresses);
@@ -356,10 +355,13 @@ export class AccountFetcher {
     }
   }
 
-  /*** Private Methods ***/
-
   /**
-   * Retrieve from cache or fetch from rpc, an account
+   * Get the cached value of an entity. Fetch from rpc on cache miss.
+   * 
+   * @param address 
+   * @param entity 
+   * @param refresh 
+   * @returns 
    */
   private async get<T extends CachedValue>(
     address: PublicKey,
@@ -383,6 +385,11 @@ export class AccountFetcher {
 
   /**
    * Retrieve from cache or fetch from rpc, a list of accounts
+   * 
+   * @param addresses 
+   * @param entity 
+   * @param refresh 
+   * @returns 
    */
   private async list<T extends CachedValue>(
     addresses: PublicKey[],
@@ -426,7 +433,10 @@ export class AccountFetcher {
   }
 
   /**
-   * Make batch rpc request
+   * bulk request for accounts address.
+   * 
+   * @param addresses 
+   * @returns 
    */
   private async bulkRequest(addresses: string[]): Promise<(Buffer | null)[]> {
     const responses: Promise<GetMultipleAccountsResponse>[] = [];

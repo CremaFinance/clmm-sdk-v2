@@ -12,17 +12,16 @@ import {
   getTokenBFromLiquidity,
   PositionStatus,
   PositionUtil,
-} from "../../utils/position";
+} from "../../math/position";
 import { TickUtil } from "../../utils/tick";
 
 /**
- * @category Quotes
  * @param liquidity - The desired liquidity to withdraw from the Clmmpool
  * @param currentTickIndex - The Clmmpool's current tickIndex
  * @param currentSqrtPrice - The Clmmpool's current sqrtPrice
- * @param tickLowerIndex - The lower index of the position that we are withdrawing from.
- * @param tickUpperIndex - The upper index of the position that we are withdrawing from.
- * @param slippageTolerance - The maximum slippage allowed when calculating the minimum tokens received.
+ * @param tickLowerIndex - The lower index of the position that we are withdrawing from
+ * @param tickUpperIndex - The upper index of the position that we are withdrawing from
+ * @param slippageTolerance - The maximum slippage allowed when calculating the minimum tokens received
  */
 export type DecreaseLiquidityQuoteParam = {
   liquidity: BN;
@@ -35,7 +34,6 @@ export type DecreaseLiquidityQuoteParam = {
 
 /**
  * Return object from decrease liquidity quote functions.
- * @category Quotes
  */
 export type DecreaseLiquidityQuote = DecreaseLiquidityInput & {
   tokenEstA: BN;
@@ -43,9 +41,8 @@ export type DecreaseLiquidityQuote = DecreaseLiquidityInput & {
 };
 
 /**
- * Get an estimated quote on the minimum tokens receivable based on the desired withdraw liquidity value.
+ * Get an estimated quote on the minimum tokens receivable based on the desired withdraw liquidity value when decrease liquidity.
  *
- * @category Quotes
  * @param liquidity - The desired liquidity to withdraw from the Clmmpool
  * @param slippageTolerance - The maximum slippage allowed when calculating the minimum tokens received.
  * @param position - A Position helper class to help interact with the Position account.
@@ -57,7 +54,7 @@ export async function decreaseLiquidityQuoteByLiquidity(
   slippageTolerance: Percentage,
   position: Position,
   clmmpool: Clmmpool
-) {
+): Promise<DecreaseLiquidityQuote> {
   const positionData = position.getData();
   const clmmpoolData = clmmpool.getData();
 
@@ -77,9 +74,8 @@ export async function decreaseLiquidityQuoteByLiquidity(
 }
 
 /**
- * Get an estimated quote on the minimum tokens receivable based on the desired withdraw liquidity value.
+ * Get an estimated decrease liquidity quote params on the minimum tokens receivable based on the desired withdraw liquidity value.
  *
- * @category Quotes
  * @param param DecreaseLiquidityQuoteParam
  * @returns An DecreaseLiquidityInput object detailing the tokenMin & liquidity values to use when calling decrease-liquidity-ix.
  */
@@ -117,6 +113,12 @@ export function decreaseLiquidityQuoteByLiquidityWithParams(
   }
 }
 
+/**
+ * Get the decrease liquidity quote params for a position that is below the current tick.
+ * 
+ * @param param - DecreaseLiquidityQuoteParam
+ * @returns 
+ */
 function quotePositionBelowRange(
   param: DecreaseLiquidityQuoteParam
 ): DecreaseLiquidityQuote {
@@ -147,6 +149,12 @@ function quotePositionBelowRange(
   };
 }
 
+/**
+ * Get quote params for a position that is in the current tick.
+ * 
+ * @param param - DecreaseLiquidityQuoteParam
+ * @returns 
+ */
 function quotePositionInRange(
   param: DecreaseLiquidityQuoteParam
 ): DecreaseLiquidityQuote {
@@ -186,6 +194,11 @@ function quotePositionInRange(
   };
 }
 
+/**
+ * Get quote params for a position that is above the current tick.
+ * @param param - DecreaseLiquidityQuoteParam
+ * @returns 
+ */
 function quotePositionAboveRange(
   param: DecreaseLiquidityQuoteParam
 ): DecreaseLiquidityQuote {

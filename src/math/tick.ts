@@ -1,5 +1,5 @@
 import { BN } from "@project-serum/anchor";
-import Decimal from "decimal.js";
+import Decimal from "../utils/decimal";
 import invariant from "tiny-invariant";
 
 import {
@@ -16,6 +16,9 @@ const LOG_B_2_X32 = "59543866431248";
 const LOG_B_P_ERR_MARGIN_LOWER_X64 = "184467440737095516";
 const LOG_B_P_ERR_MARGIN_UPPER_X64 = "15793534762490258745";
 
+/**
+ * TickMath - the math util set of tick.
+ */
 export class TickMath {
   static priceToSqrtPriceX64(
     price: Decimal,

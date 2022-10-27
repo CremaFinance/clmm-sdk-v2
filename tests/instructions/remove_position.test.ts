@@ -1,8 +1,8 @@
 import * as anchor from "@project-serum/anchor";
-import { TransactionEnvelope } from "@saberhq/solana-contrib";
+import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import { getMintInfo, getTokenAccount } from "@cremafinance/token-utils";
 import { assert } from "chai";
-import Decimal from "decimal.js";
+import Decimal from "../../src/utils/decimal";
 
 import type { CreateClmmpoolParams } from "../../src";
 import { ClmmpoolContext, ClmmpoolIx } from "../../src";

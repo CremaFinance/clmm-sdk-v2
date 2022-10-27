@@ -1,5 +1,5 @@
 import { u64 } from "@solana/spl-token";
-import Decimal from "decimal.js";
+import Decimal from "./decimal";
 
 /**
  * @category Percentage

@@ -4,7 +4,7 @@ import { MathUtil } from "../../math/utils";
 import type { ClmmpoolData, PositionData, TickData } from "../../types";
 
 /**
- * @category Quotes
+ * @category CollectFeesQuoteParam
  */
 export type CollectFeesQuoteParam = {
   clmmpool: ClmmpoolData;
@@ -14,7 +14,7 @@ export type CollectFeesQuoteParam = {
 };
 
 /**
- * @category Quotes
+ * @category CollectFeesQuote
  */
 export type CollectFeesQuote = {
   feeOwedA: BN;
@@ -22,9 +22,9 @@ export type CollectFeesQuote = {
 };
 
 /**
- * Get a quote on the outstanding fees owed to a position.
+ * Get a fee quote on the outstanding fees owed to a position.
  *
- * @category Quotes
+ * @category CollectFeesQuoteParam
  * @param param A collection of fetched Clmmpool accounts to faciliate the quote.
  * @returns A quote object containing the fees owed for each token in the pool.
  */

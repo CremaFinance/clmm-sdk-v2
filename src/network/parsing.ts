@@ -20,7 +20,7 @@ import { TokenUtil } from "../utils/token-utils";
 
 /**
  * Static abstract class definition to parse entities.
- * @category Parsables
+ * @category ParsablesEntity
  */
 export interface ParsableEntity<T> {
   /**
@@ -33,12 +33,19 @@ export interface ParsableEntity<T> {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for ClmmConfigData
+ * @category ParsableClmmpoolsConfig
  */
 @staticImplements<ParsableEntity<ClmmConfigData>>()
 export class ParsableClmmpoolsConfig {
   private constructor() {}
 
+  /**
+   * parse data for ClmmpoolData
+   * 
+   * @param data 
+   * @returns 
+   */
   static parse(data: Buffer | undefined | null): ClmmConfigData | null {
     if (!data) {
       return null;
@@ -53,6 +60,10 @@ export class ParsableClmmpoolsConfig {
   }
 }
 
+/**
+ * Static implements of ParsableEntity for PartnerData
+ * @category ParsablePartner
+ */
 @staticImplements<ParsableEntity<PartnerData>>()
 export class ParsablePartner {
   private constructor() {}
@@ -72,7 +83,8 @@ export class ParsablePartner {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for ClmmpoolData
+ * @category ParsableClmmpool
  */
 @staticImplements<ParsableEntity<ClmmpoolData>>()
 export class ParsableClmmpool {
@@ -93,7 +105,8 @@ export class ParsableClmmpool {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for PositionData
+ * @category ParsablePosition
  */
 @staticImplements<ParsableEntity<PositionData>>()
 export class ParsablePosition {
@@ -113,6 +126,10 @@ export class ParsablePosition {
   }
 }
 
+/**
+ * Static implements of ParsableEntity for PositionsData
+ * @category ParsablePositions
+ */
 @staticImplements<ParsableEntity<PositionData[]>>()
 export class ParsablePositions {
   private constructor() {}
@@ -132,7 +149,8 @@ export class ParsablePositions {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for rewarderData
+ * @category ParsableRewarder
  */
 @staticImplements<ParsableEntity<RewarderData>>()
 export class ParsableRewarder {
@@ -153,7 +171,8 @@ export class ParsableRewarder {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for TickArrayData
+ * @category ParsableTickArray
  */
 @staticImplements<ParsableEntity<TickArrayData>>()
 export class ParsableTickArray {
@@ -173,6 +192,10 @@ export class ParsableTickArray {
   }
 }
 
+/**
+ * Static implements of ParsableEntity for TickArrayMapData
+ * @category ParsableTickArrayMap
+ */
 @staticImplements<ParsableEntity<TickArrayMapData>>()
 export class ParsableTickArrayMap {
   private constructor() {}
@@ -192,7 +215,8 @@ export class ParsableTickArrayMap {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for FeeTierData
+ * @category ParsableFeeTier
  */
 @staticImplements<ParsableEntity<FeeTierData>>()
 export class ParsableFeeTier {
@@ -213,7 +237,8 @@ export class ParsableFeeTier {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for AccountInfo
+ * @category ParsableTokenInfo
  */
 @staticImplements<ParsableEntity<AccountInfo>>()
 export class ParsableTokenInfo {
@@ -234,7 +259,8 @@ export class ParsableTokenInfo {
 }
 
 /**
- * @category Parsables
+ * Static implements of ParsableEntity for MintInfo
+ * @category ParsableMintInfo
  */
 @staticImplements<ParsableEntity<MintInfo>>()
 export class ParsableMintInfo {
@@ -281,6 +307,9 @@ function staticImplements<T>() {
 
 const ClmmpoolCoder = new BorshAccountsCoder(ClmmpoolIDL as Idl);
 
+/** 
+ * Parse anchor account by account name and buffer data.
+*/
 function parseAnchorAccount(accountName: AccountName, data: Buffer) {
   const discriminator = BorshAccountsCoder.accountDiscriminator(accountName);
   if (discriminator.compare(data.slice(0, 8))) {

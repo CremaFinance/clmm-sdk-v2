@@ -8,12 +8,13 @@ import {
 import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
 
-import type { Clmmpool } from "./idls/clmmpool";
+import type { clmmpool } from "./idls/clmmpool";
 import type { DecreaseLiquidityInput } from "./types";
 import {
   METADATA_PROGRAM_ADDRESS,
   MINT_WRAPPER_PROGRAM_ID,
 } from "./types/constants";
+import { PDAUtil } from "./utils";
 import type * as addressUtil from "./utils/address-util";
 
 export type SwapInput = {
@@ -21,6 +22,7 @@ export type SwapInput = {
   byAmountIn: boolean;
   amount: BN;
   amountLimit: BN;
+  extraComputeLimit: number;
 };
 
 export type SwapWithPartnerParams = {
@@ -148,6 +150,7 @@ export type InitializeRewarderParams = {
   mintWrapper: PublicKey;
   minter: PublicKey;
   payer: PublicKey;
+  clmmConfig: PublicKey;
   clmmpool: PublicKey;
   rewarderAuthority: PublicKey;
   rewarderTokenMint: PublicKey;
@@ -206,7 +209,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static acceptProtocolAuthorityIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       newAuthority: PublicKey;
       clmmConfig: PublicKey;
@@ -229,7 +232,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static collectFeeIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       owner: PublicKey;
       clmmpool: PublicKey;
@@ -268,7 +271,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static collectPartnerFeeIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       partnerFeeClaimAuthority: PublicKey;
       partner: PublicKey;
@@ -301,7 +304,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static collectProtocolFeeIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       protocolFeeClaimAuthority: PublicKey;
       clmmConfig: PublicKey;
@@ -334,7 +337,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static collectRewarderIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       owner: PublicKey;
       clmmpool: PublicKey;
@@ -376,7 +379,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static createClmmpoolIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: CreateClmmpoolParams
   ): TransactionInstruction {
     const {
@@ -417,7 +420,7 @@ export class ClmmpoolIx {
    * @returns - Instruction to perform the action.
    */
   static createClmmConfigIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       protocolAuthority: PublicKey;
       protocolFeeClaimAuthority: PublicKey;
@@ -459,7 +462,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static createFeeTierIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       tickSpacing: number;
       feeRate: number;
@@ -497,7 +500,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static createPartnerIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: CreatePartnerParams
   ): TransactionInstruction {
     const ix = program.instruction.createPartner(
@@ -529,7 +532,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static createTickArrayIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: CreateTickArrayParams
   ): TransactionInstruction {
     const { arrayIndex, payer, clmmpool, tickArray } = params;
@@ -552,7 +555,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static createTickArrayMapIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: CreateTickArrayMapParams
   ): TransactionInstruction {
     const { payer, clmmpool, tickArrayMap } = params;
@@ -575,7 +578,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static decreaseLiquidityIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: DecreaseLiquidityParams
   ): TransactionInstruction {
     const { liquidityAmount, tokenMinA, tokenMinB } = params.liquidityInput;
@@ -610,7 +613,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static increaseLiquidity(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: IncreaseLiquidityParams
   ): TransactionInstruction {
     const { delta_liquidity, tokenAMax, tokenBMax } = params.liquidityInput;
@@ -645,7 +648,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static increaseLiquidityWithFixedTokenIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: IncreaseLiquidityWithFixedTokenParams
   ): TransactionInstruction {
     const { isAFixed, tokenA, tokenB } = params.liquidityInputWithFixedToken;
@@ -680,7 +683,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static initializeRewarderIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: InitializeRewarderParams
   ): TransactionInstruction {
     const ix = program.instruction.initializeRewarder(
@@ -690,6 +693,7 @@ export class ClmmpoolIx {
       {
         accounts: {
           payer: params.payer,
+          clmmConfig: params.clmmConfig,
           clmmpool: params.clmmpool,
           rewarderAuthority: params.rewarderAuthority,
           rewarderTokenMint: params.rewarderTokenMint,
@@ -709,7 +713,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static openPositionIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: OpenPositionParams
   ): TransactionInstruction {
     const {
@@ -723,6 +727,20 @@ export class ClmmpoolIx {
       positionEdition,
       positionAta,
     } = params;
+
+    const clmmpool_metadata = PDAUtil.getClmmpoolMetadataPDA(program.programId, clmmpool).publicKey;
+
+    const remainingAccounts = [];
+    const matedata = program.provider.connection.getAccountInfo(clmmpool_metadata);
+    if (matedata !== null) {
+      remainingAccounts.push(
+        {
+          pubkey: clmmpool_metadata,
+          isWritable: false,
+          isSigner: false,
+        })
+    }
+
     const ix = program.instruction.openPosition(
       tickLowerIndex,
       tickUpperIndex,
@@ -741,6 +759,7 @@ export class ClmmpoolIx {
           systemProgram: SystemProgram.programId,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         },
+        remainingAccounts,
       }
     );
     return ix;
@@ -753,7 +772,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static removePositionIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       owner: PublicKey;
       position: PublicKey;
@@ -793,7 +812,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static swapIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       aToB: boolean;
       byAmountIn: boolean;
@@ -879,7 +898,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static swapWithPartnerIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: SwapWithPartnerParams
   ): TransactionInstruction {
     const {
@@ -953,7 +972,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static updateFeeRateIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       newFeeRate: number;
       protocolAuthority: PublicKey;
@@ -978,7 +997,7 @@ export class ClmmpoolIx {
    * @param params
    */
   static updatePartnerIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: UpdatePartnerParams
   ): TransactionInstruction {
     const ix = program.instruction.updatePartner(
@@ -1002,15 +1021,16 @@ export class ClmmpoolIx {
    * @returns
    */
   static updateRewarderEmissionIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       rewarderIndex: number;
       emissionsPerSecond: BN;
       rewarderAuthority: PublicKey;
+      clmmConfig: PublicKey;
       clmmpool: PublicKey;
     }
   ): TransactionInstruction {
-    const { rewarderIndex, emissionsPerSecond, rewarderAuthority, clmmpool } =
+    const { rewarderIndex, emissionsPerSecond, rewarderAuthority, clmmConfig, clmmpool } =
       params;
 
     const ix = program.instruction.updateRewarderEmission(
@@ -1019,6 +1039,7 @@ export class ClmmpoolIx {
       {
         accounts: {
           rewarderAuthority,
+          clmmConfig,
           clmmpool,
         },
       }
@@ -1033,7 +1054,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static pauseClmmpoolIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       clmmConfig: PublicKey;
       protocolAuthority: PublicKey;
@@ -1058,7 +1079,7 @@ export class ClmmpoolIx {
    * @returns
    */
   static unPauseClmmpoolIx(
-    program: Program<Clmmpool>,
+    program: Program<clmmpool>,
     params: {
       clmmConfig: PublicKey;
       protocolAuthority: PublicKey;
