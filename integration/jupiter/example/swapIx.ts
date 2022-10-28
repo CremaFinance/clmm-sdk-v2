@@ -1,7 +1,6 @@
-import { ClmmpoolClientImpl, ClmmpoolContext, PDAUtil, SwapUtils, TickUtil, IDL } from "@cremafinance/crema-sdk-v2";
+import { ClmmpoolContext, PDAUtil, SwapUtils } from "@cremafinance/crema-sdk-v2";
 import { AccountInfo, Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { CremaClmm } from "../src/clmm";
-import { ClmmCoder } from "../src/core";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Provider, SignerWallet, SolanaProvider } from "@cremafinance/solana-contrib";
 
@@ -29,29 +28,17 @@ async function createSwapInstruction() {
   // tick spacing will be provided. different clmmpool will have different tick spacings.
   const tickSpacing = 2;
 
+  // Infer clmmpool publickey and tick array map publickey.
+  // tickArrayMap address can calculated from programID and clmmpool address
   const clmmConfig = PDAUtil.getClmmConfigPDA(CREMA_PROGRAM_ID).publicKey;
   const clmmpool = PDAUtil.getClmmpoolPDA(CREMA_PROGRAM_ID, clmmConfig, tokenA, tokenB, tickSpacing).publicKey;
-  const feeTier = PDAUtil.getFeeTierPDA(CREMA_PROGRAM_ID, clmmConfig, tickSpacing).publicKey;
+  const tickArrayMap = PDAUtil.getTickArrayMapPDA(CREMA_PROGRAM_ID, clmmpool).publicKey;
   const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
 
   // fetch clmmpool 
-  const clmmpoolInfo = await connection.getAccountInfo(clmmpool);
-  const clmmConfigInfo = await connection.getAccountInfo(clmmConfig);
-  const feeTierInfo = await connection.getAccountInfo(feeTier);
+  const tickArrayMapInfo = await connection.getAccountInfo(tickArrayMap);
 
-  // create sdk (clmmpool client), then simulate swap;
-  const sdk = await makeSDK();
-  const pool = await sdk.getPool(clmmpool, true);
-  await pool.simulateSwap(aToB, byAmountIn, amount);
-  
-  // tokenAVault and tokenBVault is in the clmmpool
-  const clmmpoolData = ClmmCoder.accounts.decode(
-    "clmmpool",
-    clmmpoolInfo!.data
-  );
-
-  const cremaClmm = new CremaClmm(clmmpool, clmmpoolInfo!, clmmConfigInfo!, feeTierInfo!, 
-    pool.tickArrays, 
+  const cremaClmm = new CremaClmm(clmmpool, tickArrayMapInfo!,
     {
       slippageTolerance: 0.01,
       decimalA: 6,//USDT
@@ -73,12 +60,15 @@ async function createSwapInstruction() {
   }
 
   const swapQuote = cremaClmm.getQuote(quoteParams);
+  
+  // tokenAVault and tokenBVault is in the clmmpool
+  // clmmpoolData is already fetched in the update step. 
+  const clmmpoolData = cremaClmm.clmmpoolData;
 
   // the token account of the user
   const accountA = new PublicKey("xxxxxxa");
   const accountB = new PublicKey("xxxxxxb");
-  // tickArrayMap address can calculated from programID and clmmpool address
-  const tickArrayMap = PDAUtil.getTickArrayMapPDA(CREMA_PROGRAM_ID, clmmpool).publicKey;
+
   const tokenAVault = clmmpoolData.tokenAVault;
   const tokenBVault = clmmpoolData.tokenBVault;
   const owner = new PublicKey("user wallet address");
@@ -88,19 +78,21 @@ async function createSwapInstruction() {
   const partnerAtaB = new PublicKey("xxxxB");
   const sqrtPriceLimit = SwapUtils.getDefaultSqrtPriceLimit(aToB);
   const amountLimit = byAmountIn 
-  ? (new BN(swapQuote.inAmount.toString())).mul(clmmpoolData.slippageTolerance) 
-  : (new BN(swapQuote.outAmount.toString())).mul(1 + clmmpoolData.slippageTolerance);
+  ? (new BN(swapQuote.inAmount.toString())).mul(new BN(cremaClmm.slippageTolerance)) 
+  : (new BN(swapQuote.outAmount.toString())).mul(new BN(cremaClmm.slippageTolerance + 1));
 
   const remainingAccounts = [];
-  for (let i = 0; i < pool.tickArrays.length; i++) {
+  for (let a of cremaClmm.tickArraysAddr) {
       remainingAccounts.push({
-        pubkey: clmmpoolData.tickArrays[i].address,
+        pubkey: a,
         isWritable: false,
         isSigner: false,
       });
   }
 
-  const ix = sdk.ctx.program.instruction.swapWithPartner(
+  const provider: any = loadProvider();
+  const ctx = ClmmpoolContext.fromWorkspace(provider, CREMA_PROGRAM_ID);
+  const ix = ctx.program.instruction.swapWithPartner(
     aToB,
     byAmountIn,
     amount,
@@ -135,36 +127,30 @@ function toAccountInfoMap(keys: PublicKey[], accounts: (AccountInfo<Buffer> | nu
 }
 
 export function loadProvider(): Provider {
-    const url = "https://api.mainnet-beta.solana.com";
-    const home = process.env.HOME;
-    const configFile = fs.readFileSync(
-      `${home}/.config/solana/cli/config.yml`,
-      "utf8"
-    );
-    const config = parse(configFile);
-    const wallet = new SignerWallet(keypairFromFile(config.keypair_path));
+  const url = "https://api.mainnet-beta.solana.com";
+  const home = process.env.HOME;
+  const configFile = fs.readFileSync(
+    `${home}/.config/solana/cli/config.yml`,
+    "utf8"
+  );
+  const config = parse(configFile);
+  const wallet = new SignerWallet(keypairFromFile(config.keypair_path));
 
-    const provider: any = SolanaProvider.init({
-      connection: new Connection(url, {
-        commitment: "recent",
-        disableRetryOnRateLimit: true,
-        confirmTransactionInitialTimeout: 60 * 1000,
-      }),
-      wallet,
-      opts: {
-        preflightCommitment: "recent",
-        commitment: "recent",
-      },
-    });
-    return provider
-  }
-
-export function makeSDK() {
-    const provider: any = loadProvider();
-    const ctx = ClmmpoolContext.fromWorkspace(provider, CREMA_PROGRAM_ID);
-    const sdk = new ClmmpoolClientImpl(ctx)
-    return sdk;
+  const provider: any = SolanaProvider.init({
+    connection: new Connection(url, {
+      commitment: "recent",
+      disableRetryOnRateLimit: true,
+      confirmTransactionInitialTimeout: 60 * 1000,
+    }),
+    wallet,
+    opts: {
+      preflightCommitment: "recent",
+      commitment: "recent",
+    },
+  });
+  return provider
 }
+
 
 export function keypairFromFile(path: string): Keypair {
     const secret = fs.readFileSync(path, "utf-8");

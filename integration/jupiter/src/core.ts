@@ -3,12 +3,12 @@ import { BorshCoder } from "@project-serum/anchor";
 import type { ConfirmOptions, Signer } from "@solana/web3.js";
 import { Transaction, TransactionInstruction } from "@solana/web3.js";
 
-import type { Clmmpool } from "@cremafinance/crema-sdk-v2/dist/esm/idls/clmmpool";
+import type { clmmpool } from "@cremafinance/crema-sdk-v2/dist/esm/idls/clmmpool";
 import { IDL } from "@cremafinance/crema-sdk-v2/dist/esm/idls/clmmpool";
 
 export const ClmmCoder = new BorshCoder(IDL);
 
-export type Accounts = IdlAccounts<Clmmpool>;
+export type Accounts = IdlAccounts<clmmpool>;
 
 export type FeeTierData = Accounts["feeTier"];
 export type TickArrayData = Accounts["tickArray"];
