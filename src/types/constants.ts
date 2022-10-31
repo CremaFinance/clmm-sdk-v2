@@ -1,5 +1,4 @@
-import { BN } from "@project-serum/anchor";
-import * as anchor from "@project-serum/anchor";
+import BN from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 /**
  * CLMM's config PublicKey.
@@ -80,4 +79,4 @@ export const POSITION_NFT_UPDATE_AUTHORITY = new PublicKey(
   "5QW9BCx6oZKjSWCVyBZaVU8N4jwtFnged9TsiaXvDj8Q"
 );
 
-export const ZERO_BN = new anchor.BN(0);
+export const ZERO_BN = new BN(0);

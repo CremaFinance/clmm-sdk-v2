@@ -1,12 +1,7 @@
-// import { PublicKey } from "@solana/web3.js";
-// import { PublicKey } from "@solana/web3.js";
 import { Command } from "commander";
-// import { IncreaseLiquidityInput } from "../types";
 import { catchFinallyExit, makeSDK } from "./utils";
 import { ClmmPoolUtil, getAllClmmpools, IncreaseLiquidityInput } from "..";
-import * as anchor from "@project-serum/anchor";
-import { BN } from "@project-serum/anchor";
-// import { confirmTx } from "../../tests/utils";
+import BN from "bn.js";
 import { PublicKey } from '@solana/web3.js';
 import { TickMath } from '../math/tick';
 
@@ -27,21 +22,21 @@ program
   .action((arg: any) => {
     const tickLower = arg.tickLower;
     const tickUpper = arg.tickUpper;
-    const tokenMaxA = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
-    const tokenMaxB = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMaxA = new BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMaxB = new BN(arg.tokenMaxA * Math.pow(10, 9));
     // const amountA = new Decimal(arg.tokenMaxA)
     // const amountB = new Decimal(arg.tokenMaxB)
     const isAFixed = arg.isAFixed
     const tokenAmount = isAFixed ? tokenMaxA : tokenMaxB
     const liquidityInput = ClmmPoolUtil.estLiquidityAndTokenAmountFromOneAmounts(
-      0,
       tickLower,
       tickUpper,
       tokenAmount,
       isAFixed,
       true,
       true,
-      0
+      0,
+      new BN(0)
     )
     catchFinallyExit(openPosition(tickLower, tickUpper, liquidityInput, isAFixed));
   });
@@ -55,8 +50,8 @@ program.command("increase-liquidity")
   .requiredOption("-k --swapKey <swapKey>", "swapKey address")
   .requiredOption("-i --isAFixed <isAFixed>", "isAFixed Info")
   .action((arg: any) => {
-    const tokenMaxA = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
-    const tokenMaxB = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMaxA = new BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMaxB = new BN(arg.tokenMaxA * Math.pow(10, 9));
     const positionId = new PublicKey(arg.positionId);
     const positionNftMint = new PublicKey(arg.positionNftMint);
     const swapKey = new PublicKey(arg.swapKey)
@@ -73,8 +68,8 @@ program.command("decrease-liquidity")
   .requiredOption("-k --swapKey <swapKey>", "swapKey address")
   .requiredOption("-i --isAFixed <isAFixed>", "isAFixed Info")
   .action((arg: any) => {
-    const tokenMinA = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
-    const tokenMinB = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMinA = new BN(arg.tokenMaxA * Math.pow(10, 9));
+    const tokenMinB = new BN(arg.tokenMaxA * Math.pow(10, 9));
     const positionId = new PublicKey(arg.positionId);
     const positionNftMint = new PublicKey(arg.positionNftMint);
     const swapKey = new PublicKey(arg.swapKey)
@@ -105,8 +100,8 @@ program.command("close-position")
     const positionId = new PublicKey(arg.positionId);
     const positionNftMint = new PublicKey(arg.positionNftMint);
     const swapKey = new PublicKey(arg.swapKey)
-    // const tokenMinA = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
-    // const tokenMinB = new anchor.BN(arg.tokenMaxA * Math.pow(10, 9));
+    // const tokenMinA = new BN(arg.tokenMaxA * Math.pow(10, 9));
+    // const tokenMinB = new BN(arg.tokenMaxA * Math.pow(10, 9));
     catchFinallyExit(closePosition(positionId, positionNftMint, swapKey))
   })
 program.parse(process.argv);
@@ -141,14 +136,14 @@ async function increaseLiquidity(
   const tickUpper = positionInfo.tickUpperIndex
   const tokenAmount = isAFixed ? tokenMaxA : tokenMaxB
   const liquidityInput = ClmmPoolUtil.estLiquidityAndTokenAmountFromOneAmounts(
-    0,
     tickLower,
     tickUpper,
     tokenAmount,
     isAFixed,
     true,
     true,
-    0
+    0,
+    new BN(0)
   )
 
   const tx = await positionSdk.increaseLiquidity(liquidityInput, positionId, positionNftMint, swapKey, isAFixed)
@@ -201,8 +196,8 @@ async function closePosition(positionId: PublicKey, positionNftMint: PublicKey, 
   const swapSdk = await sdk.getPool(new PublicKey('2zr9FAV9MeATbRzow9MCsYip3EZgE6nXtr1puYbJNSh3'))
   const positionSdk = await sdk.getPosition(positionId)
   const positionInfo = await positionSdk.getData()
-  const tickLower = new anchor.BN(positionInfo.tickLowerIndex)
-  const tickUpper = new anchor.BN(positionInfo.tickUpperIndex)
+  const tickLower = new BN(positionInfo.tickLowerIndex)
+  const tickUpper = new BN(positionInfo.tickUpperIndex)
   // const tokenAmount = false ? tokenMinA : tokenMinB
   const curSqrtPrice = TickMath.tickIndexToSqrtPriceX64(0)
   const { tokenA, tokenB } = ClmmPoolUtil.getTokenAmountFromLiquidity(

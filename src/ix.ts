@@ -1,5 +1,6 @@
-import type { BN, Program } from "@project-serum/anchor";
+import type { Program } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
+import BN from "bn.js";
 import type { u64 } from "@solana/spl-token";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,

@@ -1,7 +1,8 @@
 {
   "extends": "../tsconfig-base.json",
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true
   },
   "include": ["./**/*","./**/*.json","tests/", "../tests/sim-swap.test.ts"],
   "exclude": ["cli/"],

@@ -1,6 +1,6 @@
 import { ComputeBudgetProgram, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { Address, BN } from "@project-serum/anchor";
+import { Address } from "@project-serum/anchor";
 import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 import { getOrCreateATAs } from "@cremafinance/token-utils"
 import type { Clmmpool } from "../clmmpool-client";
@@ -16,6 +16,7 @@ import {
 } from "../ix";
 import { POSITION_NFT_UPDATE_AUTHORITY, TICK_ARRAY_MAP_MAX_BIT_INDEX, TICK_ARRAY_MAP_MIN_BIT_INDEX, TICK_ARRAY_SIZE,CLMMPOOL_PROGRAM_ID } from "../types/constants";
 import { AddressUtil } from "../utils/address-util"
+import BN from "bn.js";
 
 import { TokenUtil } from "../utils/token-utils"
 import { TickArray, TokenInfo } from '../types/client-types';

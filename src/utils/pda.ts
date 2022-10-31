@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import BN from "bn.js";
 import type { PublicKey } from "@solana/web3.js";
 
 import { TickMath } from "../math/tick";

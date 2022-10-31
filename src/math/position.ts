@@ -3,7 +3,7 @@ import {
     keypairIdentity,
     Metaplex,
 } from "@metaplex-foundation/js";
-import type { BN } from "@project-serum/anchor";
+import BN from "bn.js";
 import type { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
 import { MathUtil } from "../math/utils";

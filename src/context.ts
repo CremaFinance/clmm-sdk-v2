@@ -1,4 +1,3 @@
-import * as anchor from "@project-serum/anchor";
 import type { Idl } from "@project-serum/anchor";
 import { AnchorProvider, Program } from "@project-serum/anchor";
 import { Provider, SolanaProvider, Wallet } from "@cremafinance/solana-contrib";

@@ -1,7 +1,7 @@
-import { Address, BN } from "@project-serum/anchor";
+import { Address } from "@project-serum/anchor";
 import { u64 } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-
+import BN from "bn.js";
 import {
   ClmmpoolsError,
   MathErrorCode,

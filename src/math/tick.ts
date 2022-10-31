@@ -1,4 +1,4 @@
-import { BN } from "@project-serum/anchor";
+import BN from "bn.js";
 import Decimal from "../utils/decimal";
 import invariant from "tiny-invariant";
 
