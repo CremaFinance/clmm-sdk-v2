@@ -1,6 +1,5 @@
 import type { IdlAccounts, Provider } from "@project-serum/anchor";
 import { BorshCoder } from "@project-serum/anchor";
-import type { ConfirmOptions, Signer } from "@solana/web3.js";
 import { Transaction, TransactionInstruction } from "@solana/web3.js";
 
 import type { clmmpool } from "@cremafinance/crema-sdk-v2/dist/esm/idls/clmmpool";
@@ -40,15 +39,5 @@ export class Instructions {
       throw new Error("no instruction available");
     }
     return this.instructions[0];
-  }
-
-  exec({
-    signers,
-    ...options
-  }: ConfirmOptions & { signers?: (Signer | undefined)[] } = {}) {
-    if (!this.provider) {
-      throw new Error("provider not available");
-    }
-    return this.provider.send(this.tx(), signers, options);
   }
 }

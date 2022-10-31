@@ -1,5 +1,4 @@
 import { ClmmpoolData, TickData } from "@cremafinance/crema-sdk-v2/dist/esm/types/clmmpool";
-import { TickArray, TICK_ARRAY_SIZE } from "@cremafinance/crema-sdk-v2/dist/esm/types";
 import { computeSwap, PDAUtil, TickMath, TickUtil } from "@cremafinance/crema-sdk-v2";
 import type { AccountInfo } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
@@ -10,6 +9,7 @@ import type { Quote, QuoteParams } from "./quote";
 import type { CremaClmmParams } from "./type";
 import { u64 } from "@cremafinance/token-utils";
 import BN = require("bn.js");
+import { TickArray, TICK_ARRAY_SIZE } from "@cremafinance/crema-sdk-v2/dist/esm/types";
 
 const SQRTPRICE_LOWER_X64 = "184467440737095516";
 const SQERPRICE_UPPER_X64 = "15793534762490258745";
@@ -32,7 +32,7 @@ export class CremaClmm implements AMM {
   id: string;
   reserveTokenMints: PublicKey[];
   reserveTokenDecimals: number[];
-  clmmpoolData: ClmmpoolData;
+  clmmpoolData?: ClmmpoolData;
   slippageTolerance: number;
   feeRate: number;
   tickArraysAddr: PublicKey[];
@@ -49,14 +49,18 @@ export class CremaClmm implements AMM {
   ) {
     this.label = "Crema";
     this.id = address.toBase58();
+    this.reserveTokenMints = [];
     this.poolAddress = address;
     this.ticks = [];
+    this.feeRate = 0;
+    this.tickArrays = [];
+    this.arrayStratIndex = 0;
     
     const tickArrayMap = ClmmCoder.accounts.decode(
       "tickArrayMap",
       tickArrayMapInfo.data
-    );
-
+      );
+      
     let array_indexs: boolean[] = [];
     for (let index = 0; index < 868; index++) {
       let word: number = tickArrayMap.bitmap[index];
@@ -64,11 +68,12 @@ export class CremaClmm implements AMM {
         if (((word >> shift) & 0x01) > 0) {
           array_indexs.push(true);
         } else {
-          array_indexs.push(false);
+        array_indexs.push(false);
         }
       }
     }
-
+      
+    this.tickArraysAddr = [];
     for (let i = 0; i < array_indexs.length; i++) {
       if (array_indexs[i]) {
         const tickArrayAddr = PDAUtil.getTickArrayPDA(CREMA_PROGRAM_ID, address, i).publicKey;
@@ -85,7 +90,7 @@ export class CremaClmm implements AMM {
   }
 
   update(accountInfoMap: AccountInfoMap) {
-    const clmmpoolInfo = accountInfoMap.get(this.id);
+    const clmmpoolInfo: any = accountInfoMap.get(this.id);
     this.clmmpoolData = ClmmCoder.accounts.decode(
       "clmmpool",
       clmmpoolInfo.data
@@ -146,6 +151,13 @@ export class CremaClmm implements AMM {
     }
 
     let swapTickArrays: TickArray[] = [];
+
+    if (quoteParams.sourceMint.equals(this.reserveTokenMints[0]!)) {
+      aToB = true;
+    } else {
+      aToB = false;
+    }
+
     if (aToB) {
       for (let i = this.arrayStratIndex; i > this.arrayStratIndex - 3; i--) {
         swapTickArrays.push(this.tickArrays[i]);
@@ -173,10 +185,11 @@ export class CremaClmm implements AMM {
       }
     }
 
-    const swapResult = computeSwap(aToB, byAmountIn, quoteParams.amount, this.clmmpoolData, this.ticks);
+    const quoteAmount = new BN(quoteParams.amount.toString());
+    const swapResult = computeSwap(aToB, byAmountIn, quoteAmount, this.clmmpoolData!, this.ticks);
 
     const beforePrice = TickMath.sqrtPriceX64ToPrice(
-      this.clmmpoolData.currentSqrtPrice,
+      this.clmmpoolData!.currentSqrtPrice,
       this.reserveTokenDecimals[0]!,
       this.reserveTokenDecimals[1]!
     ).toNumber();
@@ -188,9 +201,9 @@ export class CremaClmm implements AMM {
 
     let isExceed = false;
     if (byAmountIn) {
-      isExceed = swapResult.amountIn.lt(quoteParams.amount);
+      isExceed = swapResult.amountIn.lt(quoteAmount);
     } else {
-      isExceed = swapResult.amountOut.lt(quoteParams.amount);
+      isExceed = swapResult.amountOut.lt(quoteAmount);
     }
 
     return {
