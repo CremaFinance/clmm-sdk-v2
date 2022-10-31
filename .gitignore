@@ -5,6 +5,6 @@ dist
 .pnp.cjs
 .pnp.loader.mjs
 yarn.lock
-package-lock.json
 *.d.ts
 *.js
+package-lock.json
