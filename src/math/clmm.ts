@@ -1,7 +1,7 @@
-import { Address } from "@project-serum/anchor";
+import { Address, BN } from "@project-serum/anchor";
 import { u64 } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-import BN from "bn.js";
+
 import {
   ClmmpoolsError,
   MathErrorCode,
@@ -443,17 +443,6 @@ export function computeSwap(
       targetSqrtPrice = tick.sqrtPrice;
     }
 
-    // console.log(
-    //   "clmmpoolclient:",
-    //   "tick_index;", tick.index,
-    //   "\ncurrentSqrtPrice:", currentSqrtPrice.toString(),
-    //   "\ntargetSqrtPrice:", targetSqrtPrice.toString(),
-    //   "\nliquidity:", currentLiquidity.toString(),
-    //   "\namount:", remainerAmount.toString(),
-    //   "\nfeeRate:", poolData.feeRate.toString(),
-    //   "\nbyAmountIn:", byAmountIn,
-    // )
-    
     const stepResult = computeSwapStep(
       currentSqrtPrice,
       targetSqrtPrice,

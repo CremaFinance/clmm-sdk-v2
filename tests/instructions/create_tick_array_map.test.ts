@@ -1,4 +1,5 @@
 import * as anchor from "@project-serum/anchor";
+import BN from "bn.js";
 import { TransactionEnvelope } from "@cremafinance/solana-contrib";
 
 import { ClmmpoolContext, ClmmpoolIx } from "../../src";
@@ -18,7 +19,7 @@ describe("create_tick_array_map", () => {
     const { poolCreateInfo } = await createTestPool(
       ctx,
       TickSpacing.Standard,
-      MathUtil.toX64_BN(new anchor.BN(10))
+      MathUtil.toX64_BN(new BN(10))
     );
 
     await fetcher.getPool(poolCreateInfo.clmmpool);

@@ -10,24 +10,22 @@ import type {
   FeeTierData,
   PartnerData,
   PositionData,
-  RewarderData,
   TickArrayData,
   TickArrayMapData,
 } from "../types";
-import { AddressUtil } from "../utils/address-util";
-import type { ParsableEntity } from "./parsing";
 import {
   ParsableClmmpool,
   ParsableClmmpoolsConfig,
+  ParsableEntity,
   ParsableFeeTier,
   ParsableMintInfo,
   ParsablePartner,
   ParsablePosition,
-  ParsableRewarder,
   ParsableTickArray,
   ParsableTickArrayMap,
   ParsableTokenInfo,
 } from "./parsing";
+import { AddressUtil } from "../utils/address-util";
 
 /**
  * Supported accounts
@@ -39,7 +37,6 @@ type CachedValue =
   | TickArrayData
   | FeeTierData
   | AccountInfo
-  | RewarderData
   | PositionData[]
   | MintInfo;
 
@@ -118,34 +115,6 @@ export class AccountFetcher {
     refresh = true
   ): Promise<PositionData | null> {
     return this.get(AddressUtil.toPubKey(address), ParsablePosition, refresh);
-  }
-
-    /**
-   * Retrieve cached position accounts. Fetch from rpc on cache miss.
-   *
-   * @param address position address
-   * @param refresh force cache refresh, default true
-   * @returns position account
-   */
-  async getPositions(
-    address: Address[],
-    refresh = true
-  ): Promise<(PositionData | null)[]> {
-    return this.list(AddressUtil.toPubKeys(address), ParsablePosition, refresh);
-  }
-
-  /**
-   * Retrieve a cached rewarder account. Fetch from rpc on cache miss.
-   *
-   * @param address rewarder address
-   * @param refresh force cache refresh
-   * @returns rewarder account
-   */
-  async getRewarderInfo(
-    address: Address,
-    refresh = false
-  ): Promise<RewarderData | null> {
-    return this.get(AddressUtil.toPubKey(address), ParsableRewarder, refresh);
   }
 
   /**

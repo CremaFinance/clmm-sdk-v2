@@ -1,6 +1,5 @@
-import type { Program } from "@project-serum/anchor";
+import type { BN, Program } from "@project-serum/anchor";
 import * as anchor from "@project-serum/anchor";
-import BN from "bn.js";
 import type { u64 } from "@solana/spl-token";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -350,7 +349,6 @@ export class ClmmpoolIx {
       rewardsTokenMint: PublicKey;
       tickArrayLower: PublicKey;
       tickArrayUpper: PublicKey;
-      // tokenProgram: PublicKey;
       rewarderIndex: number;
     }
   ): TransactionInstruction {
@@ -932,7 +930,7 @@ export class ClmmpoolIx {
     for (let i = 0; i < tickArrays.length; i++) {
       remainingAccounts.push({
         pubkey: tickArrays[i]!,
-        isWritable: false,
+        isWritable: true,
         isSigner: false,
       });
     }

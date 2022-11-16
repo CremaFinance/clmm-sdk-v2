@@ -1,7 +1,7 @@
-import type { Provider } from "@cremafinance/solana-contrib";
+import { Provider } from "@cremafinance/solana-contrib";
 import { getTokenAccount } from "@cremafinance/token-utils";
-import type { PublicKey } from "@solana/web3.js";
-import { BN } from "bn.js";
+import { PublicKey } from "@solana/web3.js";
+import BN from "bn.js";
 import invariant from "tiny-invariant";
 
 import type { ClmmpoolContext } from "../context";
@@ -229,6 +229,44 @@ export class TickUtil {
 
     const tickData = tickArray!.ticks[offset];
     return tickData!;
+  }
+
+  static getRewardInTickRange(
+    pool: ClmmpoolData,
+    tickLower: TickData,
+    tickUpper: TickData,
+    tickLowerIndex: number,
+    tickUpperIndex: number,
+    growthGlobal: BN[],
+  ) {
+    let rewarderInfos: any = pool.rewarderInfos;
+    let rewarderGrowthInside = [new BN(0), new BN(0), new BN(0)]
+
+    for(let i = 0; i < rewarderInfos.length; i++) {
+      let rewarderInfo = rewarderInfos[i];
+      if (rewarderInfo.mint === PublicKey.default.toString()) {
+        continue;
+      }
+      let rewarder_growth_below = growthGlobal[i];
+      if(tickLower !== null){
+        if (pool.currentTickIndex<tickLowerIndex) {
+          rewarder_growth_below = growthGlobal[i].sub(tickLower.rewardGrowthOutside[i]);
+        } else {
+          rewarder_growth_below = tickLower.rewardGrowthOutside[i];
+        }
+      }
+      let rewarder_growth_above = new BN(0);
+      if(tickUpper !== null){
+        if (pool.currentTickIndex >= tickUpperIndex) {
+          rewarder_growth_above = growthGlobal[i].sub(tickUpper.rewardGrowthOutside[i]);
+        } else {
+          rewarder_growth_above = tickUpper.rewardGrowthOutside[i];
+        }
+      }
+
+      rewarderGrowthInside[i] = growthGlobal[i].sub(rewarder_growth_below).sub(rewarder_growth_above);
+    }
+    return rewarderGrowthInside;
   }
 }
 

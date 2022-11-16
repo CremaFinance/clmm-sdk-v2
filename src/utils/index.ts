@@ -7,3 +7,4 @@ export * from "./percentage";
 export * from "./tick";
 export * from "./token-utils";
 export * from "./types";
+export * from "./rewarder";

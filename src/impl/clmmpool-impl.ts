@@ -2,7 +2,7 @@ import { ComputeBudgetProgram, Keypair, PublicKey, TransactionInstruction } from
 import { NATIVE_MINT } from "@solana/spl-token";
 import { Address } from "@project-serum/anchor";
 import { TransactionEnvelope } from "@cremafinance/solana-contrib";
-import { getOrCreateATAs } from "@cremafinance/token-utils"
+import { getOrCreateATA, getOrCreateATAs, ZERO } from "@cremafinance/token-utils"
 import type { Clmmpool } from "../clmmpool-client";
 import type { ClmmpoolContext } from "../context";
 import type { AccountFetcher } from "../network";
@@ -10,13 +10,13 @@ import type { ClmmpoolData, DecreaseLiquidityInput, IncreaseLiquidityInput, Tick
 import { getTokenVaultAccountInfos } from "./util";
 import invariant from "tiny-invariant";
 import { PDAUtil } from "../utils/pda";
+import BN from "bn.js";
 export const INIT_KEY = new PublicKey("11111111111111111111111111111111");
 import {
   ClmmpoolIx, SwapInput
 } from "../ix";
-import { POSITION_NFT_UPDATE_AUTHORITY, TICK_ARRAY_MAP_MAX_BIT_INDEX, TICK_ARRAY_MAP_MIN_BIT_INDEX, TICK_ARRAY_SIZE,CLMMPOOL_PROGRAM_ID } from "../types/constants";
+import { POSITION_NFT_UPDATE_AUTHORITY, TICK_ARRAY_MAP_MAX_BIT_INDEX, TICK_ARRAY_MAP_MIN_BIT_INDEX, TICK_ARRAY_SIZE,CLMMPOOL_PROGRAM_ID, ZERO_BN } from "../types/constants";
 import { AddressUtil } from "../utils/address-util"
-import BN from "bn.js";
 
 import { TokenUtil } from "../utils/token-utils"
 import { TickArray, TokenInfo } from '../types/client-types';
@@ -24,7 +24,8 @@ import { TickArrayUtil, TickUtil } from "../utils/tick";
 import { Decimal } from "decimal.js";
 import { computeSwap } from "../math/clmm";
 import type { u64 } from "@solana/spl-token";
-import { SwapUtils } from "../math";
+import {  getAllPositionsAddrFromPool, MathUtil, PositionUtil, SwapUtils } from "../math";
+import { listRewarderInfosFromClmmpool, emissionsEveryDay } from "../utils";
 
 export interface PendingOpenPosition {
   positionId: PublicKey;
@@ -59,6 +60,7 @@ export class ClmmpoolImpl implements Clmmpool {
   private data: ClmmpoolData;
   private ticks: TickData[];
   private refreshTime: Date;
+  private growthGlobal: BN[];
   constructor( 
     readonly ctx: ClmmpoolContext,
     readonly fetcher: AccountFetcher,
@@ -73,6 +75,7 @@ export class ClmmpoolImpl implements Clmmpool {
     this.ticks = [];
     this.tickArrays = [];
     this.refreshTime = new Date();
+    this.growthGlobal = [new BN(0), new BN(0), new BN(0)];
   }
 
   getAddress(): PublicKey {
@@ -670,6 +673,131 @@ export class ClmmpoolImpl implements Clmmpool {
     }
 
     return tx
+  }
+
+  async emissionEveryDay() {
+    const emissions = await emissionsEveryDay(this.ctx, this.address);
+    return emissions;
+  }
+
+  async updatePoolRewarder(currentTime: BN) {
+    await this.refresh();
+    const last_time = this.data.rewarderLastUpdatedTime;
+    this.data.rewarderLastUpdatedTime = currentTime;
+
+    if(this.data.liquidity.eq(new BN(0)) || currentTime.eq(last_time)) {
+      return;
+    }
+
+    const timeDelta = currentTime.div(new BN(1000)).sub(last_time).add(new BN(15));
+    const rewarderInfos: any = this.data.rewarderInfos;
+
+    for (let i = 0; i < rewarderInfos.length; i++) {
+      const rewarderInfo = rewarderInfos[i];
+      if (rewarderInfo.mint === PublicKey.default.toString()) {
+        continue;
+      }
+
+      const rewarderGrowthDelta =  MathUtil.checkMulDivFloor(timeDelta, rewarderInfo.emissionsPerSecond, this.data.liquidity, 128);
+      this.growthGlobal[i] = new BN(rewarderInfo.growthGlobal).add(rewarderGrowthDelta);
+    }
+  }
+
+  async posRewardersAmount(positionId: PublicKey) {
+    const currentTime = Date.parse(new Date().toString());
+    await this.updatePoolRewarder(new BN(currentTime));
+
+    const position = await this.fetcher.getPosition(positionId, true);
+    const tickLower = await TickUtil.getTickDataFromIndex(this.fetcher, this.address, this.ctx.program.programId, position!.tickLowerIndex, this.data.tickSpacing);
+    const tickUpper = await TickUtil.getTickDataFromIndex(this.fetcher, this.address, this.ctx.program.programId, position!.tickUpperIndex, this.data.tickSpacing);
+    const rewardersInside = TickUtil.getRewardInTickRange(this.data, tickLower, tickUpper, position!.tickLowerIndex, position!.tickUpperIndex, this.growthGlobal);
+
+    const growthInside = [];
+    const AmountOwed = [];
+
+    let posRewarderInfos: any = position?.rewarderInfos;
+
+    for (let i = 0; i < rewardersInside.length; i++) {
+      let posRewarderInfo = posRewarderInfos[i];
+
+      const growthDelta = rewardersInside[i].sub(posRewarderInfo.growthInside);
+      const amountOwedDelta = MathUtil.checkMulShiftRight(position!.liquidity, growthDelta, 64, 256);
+
+      growthInside.push(rewardersInside[i]);
+      
+      AmountOwed.push(new BN(posRewarderInfo.AmountOwed).add(amountOwedDelta));
+    }
+
+    return AmountOwed;
+  }
+
+  async poolRewardersAmount() {
+    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher, this.address);
+    let rewarderAmount = [ZERO_BN, ZERO_BN, ZERO_BN];
+    for(let i=0; i<positions.length; i++) {
+      for(let j=0; j<3; j++) {
+        const posRewarderInfo = await this.posRewardersAmount(positions[i]);
+        rewarderAmount[j] = rewarderAmount[j].add(posRewarderInfo[j]);
+      }
+    }
+
+    return rewarderAmount;
+  }
+
+  async collectRewarderIx(rewarderIndex: number, positionId: PublicKey): Promise<TransactionEnvelope> {
+    const clmmpool = this.data;
+    const position = await this.ctx.fetcher.getPosition(positionId, true);
+    const positionAta = await getOrCreateATA({provider: this.ctx.provider, mint: position!.positionNftMint, owner: this.ctx.wallet.publicKey});
+    
+    const lowerArrayIndex = TickUtil.getArrayIndex(position!.tickLowerIndex, clmmpool.tickSpacing);
+    const upperArrayIndex = TickUtil.getArrayIndex(position!.tickUpperIndex, clmmpool.tickSpacing);
+    const tickArrayLower = PDAUtil.getTickArrayPDA(this.ctx.program.programId, this.address, lowerArrayIndex).publicKey;
+    const tickArrayUpper = PDAUtil.getTickArrayPDA(this.ctx.program.programId, this.address, upperArrayIndex).publicKey;
+
+    const rewarderInfos = await listRewarderInfosFromClmmpool(this.ctx, this.address);
+    if(rewarderIndex >= rewarderInfos.length) {
+      throw new Error('rewarder index is out of range');
+    }
+    const minter = rewarderInfos[rewarderIndex].minter;
+    const mintWrapper = rewarderInfos[rewarderIndex].mintWrapper;
+    const rewardsTokenMint = rewarderInfos[rewarderIndex].mint;
+    const rewarderAta = await getOrCreateATA({provider: this.ctx.provider, mint: rewardsTokenMint, owner: this.ctx.wallet.publicKey});
+
+    const tx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.collectRewarderIx(this.ctx.program, {
+      owner: this.ctx.wallet.publicKey,
+      clmmpool: this.address,
+      position: positionId,
+      positionAta: positionAta.address,
+      rewarderAta: rewarderAta.address,
+      mintWrapper,
+      minter,
+      rewardsTokenMint,
+      tickArrayLower,
+      tickArrayUpper,
+      rewarderIndex
+    })])
+
+    return tx;
+  }
+
+  async collectAllRewarderIxs(): Promise<TransactionEnvelope> {
+    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);
+
+    const ixs = [];
+    for(let i=0; i<3; i++) {
+      const rewarderInfo: any = this.data.rewarderInfos;
+      if (rewarderInfo.mint === PublicKey.default.toString()) {
+        continue;
+      }
+
+      for (let j=0; j< positions.length; j++) {
+        const ix = (await this.collectRewarderIx(i, positions[j])).instructions[0];
+        ixs.push(ix);
+      }
+    }
+
+    const tx = new TransactionEnvelope(this.ctx.provider, ixs);
+    return tx;
   }
 
   private async refresh() {

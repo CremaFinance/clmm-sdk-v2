@@ -12,7 +12,6 @@ import { TokenUtil } from "../utils/token-utils";
 import { Decimal } from 'decimal.js';
 import BN from "bn.js";
 
-
 export class PositionImpl implements Position {
   private data: PositionData;
   constructor(
