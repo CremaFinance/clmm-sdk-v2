@@ -763,36 +763,47 @@ export class ClmmpoolImpl implements Clmmpool {
     const rewardsTokenMint = rewarderInfos[rewarderIndex].mint;
     const rewarderAta = await getOrCreateATA({provider: this.ctx.provider, mint: rewardsTokenMint, owner: this.ctx.wallet.publicKey});
 
-    const tx = new TransactionEnvelope(this.ctx.provider, [ClmmpoolIx.collectRewarderIx(this.ctx.program, {
-      owner: this.ctx.wallet.publicKey,
-      clmmpool: this.address,
-      position: positionId,
-      positionAta: positionAta.address,
-      rewarderAta: rewarderAta.address,
-      mintWrapper,
-      minter,
-      rewardsTokenMint,
-      tickArrayLower,
-      tickArrayUpper,
-      rewarderIndex
-    })])
+    const ixs = [];
+    if (rewarderAta.instruction !== null){
+      ixs.push(rewarderAta.instruction)
+    }
+    ixs.push(
+      ClmmpoolIx.collectRewarderIx(this.ctx.program, {
+        owner: this.ctx.wallet.publicKey,
+        clmmpool: this.address,
+        position: positionId,
+        positionAta: positionAta.address,
+        rewarderAta: rewarderAta.address,
+        mintWrapper,
+        minter,
+        rewardsTokenMint,
+        tickArrayLower,
+        tickArrayUpper,
+        rewarderIndex
+    }))
 
+    const tx = new TransactionEnvelope(this.ctx.provider, ixs)
     return tx;
   }
 
   async collectAllRewarderIxs(): Promise<TransactionEnvelope> {
-    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);
+    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);    
 
     const ixs = [];
     for(let i=0; i<3; i++) {
-      const rewarderInfo: any = this.data.rewarderInfos;
-      if (rewarderInfo.mint === PublicKey.default.toString()) {
+      const rewarderInfos: any = this.data.rewarderInfos;
+      if (rewarderInfos[i].mint.toString() === PublicKey.default.toString()) {
         continue;
       }
 
+      const rewarderAta = await getOrCreateATA({provider: this.ctx.provider, mint: rewarderInfos[i].mint, owner: this.ctx.wallet.publicKey});
+      if (rewarderAta.instruction !== null) {
+        ixs.push(rewarderAta.instruction);
+      }
+
       for (let j=0; j< positions.length; j++) {
-        const ix = (await this.collectRewarderIx(i, positions[j])).instructions[0];
-        ixs.push(ix);
+        const ix = (await this.collectRewarderIx(i, positions[j])).instructions;
+        ixs.push(ix[ix.length - 1])
       }
     }
 
