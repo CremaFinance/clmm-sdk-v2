@@ -421,11 +421,11 @@ export function computeSwap(
 
   for (const tick of swapTicks) {
     if (aToB) {
-      if(poolData.currentTickIndex < tick.index) {
+      if(poolData.currentTickIndex < tick.index || tick.sqrtPrice.eq(currentSqrtPrice)) {
         continue
       }
     } else {
-      if (poolData.currentTickIndex > tick.index) {
+      if (poolData.currentTickIndex >= tick.index) {
       continue
       }
     }
