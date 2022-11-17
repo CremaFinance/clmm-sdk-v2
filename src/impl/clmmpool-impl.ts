@@ -787,7 +787,7 @@ export class ClmmpoolImpl implements Clmmpool {
   }
 
   async collectAllRewarderIxs(): Promise<TransactionEnvelope> {
-    const positions = await getAllPositionsFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);    
+    const positions = await getAllPositionsFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher, this.address);    
 
     const ixs = [];
     for(let i=0; i<3; i++) {
@@ -802,7 +802,7 @@ export class ClmmpoolImpl implements Clmmpool {
       }
 
       for (let j=0; j< positions.length; j++) {
-        const ix = (await this.collectRewarderIx(i, positions[j].address)).instructions;
+        const ix = (await this.collectRewarderIx(i, positions[j])).instructions;
         ixs.push(ix[ix.length - 1])
       }
     }
