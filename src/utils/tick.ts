@@ -225,7 +225,7 @@ export class TickUtil {
       clmmpool,
       arrayIndex
     ).publicKey;
-    const tickArray = await fetcher.getTickArray(tickArrayAddress, true);
+    const tickArray = await fetcher.getTickArray(tickArrayAddress, false);
 
     const tickData = tickArray!.ticks[offset];
     return tickData!;

@@ -24,7 +24,7 @@ import { TickArrayUtil, TickUtil } from "../utils/tick";
 import { Decimal } from "decimal.js";
 import { computeSwap } from "../math/clmm";
 import type { u64 } from "@solana/spl-token";
-import {  getAllPositionsAddrFromPool, MathUtil, PositionUtil, SwapUtils } from "../math";
+import { getAllPositionsFromPool, MathUtil, SwapUtils } from "../math";
 import { listRewarderInfosFromClmmpool, emissionsEveryDay } from "../utils";
 
 export interface PendingOpenPosition {
@@ -703,11 +703,11 @@ export class ClmmpoolImpl implements Clmmpool {
     }
   }
 
-  async posRewardersAmount(positionId: PublicKey) {
+  async posRewardersAmount(positionId: PublicKey, refresh: boolean= true) {
     const currentTime = Date.parse(new Date().toString());
     await this.updatePoolRewarder(new BN(currentTime));
 
-    const position = await this.fetcher.getPosition(positionId, true);
+    const position = await this.fetcher.getPosition(positionId, refresh);
     const tickLower = await TickUtil.getTickDataFromIndex(this.fetcher, this.address, this.ctx.program.programId, position!.tickLowerIndex, this.data.tickSpacing);
     const tickUpper = await TickUtil.getTickDataFromIndex(this.fetcher, this.address, this.ctx.program.programId, position!.tickUpperIndex, this.data.tickSpacing);
     const rewardersInside = TickUtil.getRewardInTickRange(this.data, tickLower, tickUpper, position!.tickLowerIndex, position!.tickUpperIndex, this.growthGlobal);
@@ -732,11 +732,11 @@ export class ClmmpoolImpl implements Clmmpool {
   }
 
   async poolRewardersAmount() {
-    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher, this.address);
+    const positions = await getAllPositionsFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher, this.address);
     let rewarderAmount = [ZERO_BN, ZERO_BN, ZERO_BN];
     for(let i=0; i<positions.length; i++) {
       for(let j=0; j<3; j++) {
-        const posRewarderInfo = await this.posRewardersAmount(positions[i]);
+        const posRewarderInfo = await this.posRewardersAmount(positions[i], false);
         rewarderAmount[j] = rewarderAmount[j].add(posRewarderInfo[j]);
       }
     }
@@ -787,7 +787,7 @@ export class ClmmpoolImpl implements Clmmpool {
   }
 
   async collectAllRewarderIxs(): Promise<TransactionEnvelope> {
-    const positions = await getAllPositionsAddrFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);    
+    const positions = await getAllPositionsFromPool(this.ctx.connection, this.ctx.wallet.publicKey, CLMMPOOL_PROGRAM_ID, this.fetcher,this.address);    
 
     const ixs = [];
     for(let i=0; i<3; i++) {
@@ -802,7 +802,7 @@ export class ClmmpoolImpl implements Clmmpool {
       }
 
       for (let j=0; j< positions.length; j++) {
-        const ix = (await this.collectRewarderIx(i, positions[j])).instructions;
+        const ix = (await this.collectRewarderIx(i, positions[j].address)).instructions;
         ixs.push(ix[ix.length - 1])
       }
     }
