@@ -426,7 +426,12 @@ export function computeSwap(
   const sqrtPriceLimit = SwapUtils.getDefaultSqrtPriceLimit(aToB);
 
   let firstTickIndex = 0;
-  let isFind = false;
+
+  if (aToB) {
+    firstTickIndex = poolData.currentTickIndex
+  } else {
+    firstTickIndex = poolData.currentTickIndex + 1;
+  }
 
   for (const tick of swapTicks) {
     if (aToB) {
@@ -441,11 +446,6 @@ export function computeSwap(
 
     if (tick === null) {
       continue;
-    }
-
-    if (isFind === false) {
-      firstTickIndex = tick.index;
-      isFind = true;
     }
 
     if (
