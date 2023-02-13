@@ -29,7 +29,7 @@ lazy_static! {
     };
 }
 
-pub struct CremaAmm {
+pub struct CremaClmm {
     key: Pubkey,
     label: String,
     reserve_mints: [Pubkey; 2],
@@ -41,7 +41,7 @@ pub struct CremaAmm {
     tick_array_map_addr: Pubkey,
 }
 
-impl CremaAmm {
+impl CremaClmm {
     pub fn from_keyed_account(keyed_account: &KeyedAccount) -> Result<Self> {
         let clmmpool = Clmmpool::try_from_slice(&keyed_account.account.data[8..]).unwrap();
         let reserve_mints = [clmmpool.token_a.clone(), clmmpool.token_b.clone()];
@@ -78,8 +78,8 @@ impl CremaAmm {
     }
 
     #[allow(dead_code)]
-    fn clone(&self) -> CremaAmm {
-        CremaAmm {
+    fn clone(&self) -> CremaClmm {
+        CremaClmm {
             key: self.key,
             label: self.label.clone(),
             reserve_mints: self.reserve_mints,
@@ -98,7 +98,7 @@ impl CremaAmm {
     }
 }
 
-impl Amm for CremaAmm {
+impl Amm for CremaClmm {
     fn label(&self) -> String {
         self.label.clone()
     }
@@ -228,7 +228,7 @@ mod tests {
 
     use crate::{
         amm::{Amm, QuoteParams},
-        crema::CremaAmm,
+        crema::CremaClmm,
         harness::Harness,
         instructions::swap_with_partner::SWAP_PROGRAM_ID,
         state::clmmpool::Clmmpool,
@@ -268,7 +268,7 @@ mod tests {
         let harness = Harness::new(tick_array_map);
         let keyed_account = harness.get_keyed_accounts(POOL).unwrap();
 
-        let mut amm = CremaAmm::from_keyed_account(&keyed_account).unwrap();
+        let mut amm = CremaClmm::from_keyed_account(&keyed_account).unwrap();
         harness.update_amm(&mut amm);
 
         let quote = amm
