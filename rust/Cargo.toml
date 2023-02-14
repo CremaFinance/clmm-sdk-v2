@@ -1,5 +1,5 @@
 [package]
-name = "clmm-integration"
+name = "crema-clmm"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,10 +16,9 @@ serde_json = "1.0.82"
 serde = "1.0.140"
 lazy_static = "1.2.0"
 rust_decimal = { version = "1.26.1", features = ["maths"] }
-solana-sdk = "1.10.29"
-solana-client = "1.10.29"
-solana-program = "1.10.29"
-jupiter = { path = "./jupiter" }
+solana-sdk = "1.14.11"
+solana-client = "1.14.11"
+solana-program = "1.14.11"
+# jupiter = { path = "./jupiter" }
 borsh = { version = "0.9.1", features = ["const-generics"] }
 sha2 = "0.10.2"
-solana-cli-config = "1.10.29"

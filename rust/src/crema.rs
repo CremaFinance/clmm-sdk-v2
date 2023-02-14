@@ -240,13 +240,12 @@ mod tests {
 
     #[test]
     fn test_quote() {
-        const POOL: Pubkey = pubkey!("CZv2gBbCU6HmaVHegbns8UEmTfa3DL3SE5SfnmJ4LDNG");
+        const POOL: Pubkey = pubkey!("5k8tWKovN8z77FzraNova2nhDaw4JzzxLAxzvYZZmcvN");
 
-        let token_a: Pubkey = pubkey!("F8VbcW1M1SrJPZ9FzxFk8cKPy8bWufpHrWc7PekuxjSC");
-        let token_b: Pubkey = pubkey!("4qHyzMtfqJoFNBwdW2XBkmryHRg73kdj2QDt91KTZZ3e");
+        let token_a: Pubkey = pubkey!("CRMaDAzKCWYbhUfsKYA8448vaA1qUzCETd7gNBDzQ1ks");
+        let token_b: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 
-        let config = Config::load("/Users/hgamiui9/.config/solana/cli/config.yml").unwrap();
-        let json_rpc_url = config.json_rpc_url.clone();
+        let json_rpc_url = "https://mercurial.rpcpool.com/e1ae11b59df1dfe6cfaabca05d66";
         let rpc_timeout = Duration::from_secs(200);
         let commitment = CommitmentConfig {
             commitment: CommitmentLevel::Finalized,
@@ -263,6 +262,7 @@ mod tests {
 
         // must get once tick array map date before init amm
         let tick_map_address = Clmmpool::get_tick_map_address(&POOL, &SWAP_PROGRAM_ID);
+        println!("{:?}", tick_map_address);
         let tick_map_data = rpc_client.get_account_data(&tick_map_address).unwrap();
         let tick_array_map = Box::new(tick_map_data);
         let harness = Harness::new(tick_array_map);
