@@ -1,10 +1,6 @@
 //! A custom implementation of https://github.com/sdroege/rust-muldiv to support phantom overflow resistant
-
+use super::bn::{Downcast, LowHigh, Shift, U128, U256};
 use std::ops::{Add, Mul, Shl, Shr};
-
-use crate::math::bn::Downcast;
-
-use super::bn::{LowHigh, Shift, U128, U256};
 
 pub trait FullMath<RHS = Self> {
     /// Output type for the methods of this trait.
@@ -51,7 +47,7 @@ impl FullMath for u128 {
     }
 
     fn mul_div_ceil(self, num: Self, denom: Self) -> Self::Output {
-        let r = self.full_mul(num) + (denom - 1) / denom;
+        let r = (self.full_mul(num) + (denom - 1)) / denom;
         r.as_u128()
     }
 

@@ -197,9 +197,9 @@ impl Amm for CremaClmm {
         };
 
         let not_enough_liquidity = if by_amount_in {
-            swap_result.amount_in < quote_params.in_amount
+            swap_result.amount_in < quote_params.in_amount as u128
         } else {
-            swap_result.amount_out < quote_params.in_amount
+            swap_result.amount_out < quote_params.in_amount as u128
         };
 
         let fee_pct = Decimal::from_f32_retain(self.fee_rate as f32).unwrap();
@@ -212,8 +212,8 @@ impl Amm for CremaClmm {
             not_enough_liquidity,
             min_in_amount: Option::None,
             min_out_amount: Option::None,
-            in_amount: swap_result.amount_in,
-            out_amount: swap_result.amount_out,
+            in_amount: swap_result.amount_in as u64,
+            out_amount: swap_result.amount_out as u64,
             fee_amount: quote_params.in_amount * (self.fee_rate as u64) / 1000000,
             fee_mint,
             fee_pct,
@@ -240,10 +240,10 @@ mod tests {
 
     #[test]
     fn test_quote() {
-        const POOL: Pubkey = pubkey!("CZv2gBbCU6HmaVHegbns8UEmTfa3DL3SE5SfnmJ4LDNG");
+        const POOL: Pubkey = pubkey!("UiXrDgeEtrmA6rLHEMuJcn6D31qj3Noy7cDkVYKb6Tj");
 
-        let token_a: Pubkey = pubkey!("F8VbcW1M1SrJPZ9FzxFk8cKPy8bWufpHrWc7PekuxjSC");
-        let token_b: Pubkey = pubkey!("4qHyzMtfqJoFNBwdW2XBkmryHRg73kdj2QDt91KTZZ3e");
+        let token_a: Pubkey = pubkey!("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263");
+        let token_b: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
 
         let config = Config::load("/Users/hgamiui9/.config/solana/cli/config.yml").unwrap();
         let json_rpc_url = config.json_rpc_url.clone();
@@ -273,9 +273,9 @@ mod tests {
 
         let quote = amm
             .quote(&QuoteParams {
-                in_amount: 800038029000000,
-                input_mint: token_a,
-                output_mint: token_b,
+                in_amount: 600000000000,
+                input_mint: token_b,
+                output_mint: token_a,
             })
             .unwrap();
 

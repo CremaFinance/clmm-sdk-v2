@@ -10,18 +10,18 @@ pub struct StepInfo {
     pub current_sqrt_price: u128,
     pub target_sqrt_price: u128,
     pub after_sqrt_price: u128,
-    pub start_remainer: u64,
-    pub after_remainer: u64,
+    pub start_remainer: u128,
+    pub after_remainer: u128,
     pub after_tick_index: i32,
-    pub amount_in: u64,
-    pub amount_out: u64,
-    pub fee_amount: u64,
-    pub amount_used: u64,
+    pub amount_in: u128,
+    pub amount_out: u128,
+    pub fee_amount: u128,
+    pub amount_used: u128,
 }
 
 impl StepInfo {
     fn from(
-        remainer: u64,
+        remainer: u128,
         step_result: &SwapStepResult,
         current_tick_index: i32,
         current_sqrt_price: u128,
@@ -45,9 +45,9 @@ impl StepInfo {
 
 #[derive(Debug, Default)]
 pub struct ComputeSwapResult {
-    pub amount_in: u64,
-    pub amount_out: u64,
-    pub fee_amount: u64,
+    pub amount_in: u128,
+    pub amount_out: u128,
+    pub fee_amount: u128,
     pub next_sqrt_price: u128,
 }
 
@@ -67,7 +67,7 @@ pub fn compute_swap(
 ) -> ComputeSwapResult {
     let (_, ticks) = pool_info.ticks_for_swap(a2b, 100);
     let mut pool = pool_info.pool;
-    let mut remainer_amount = amount;
+    let mut remainer_amount = amount as u128;
     let mut swap_result = ComputeSwapResult::default();
     let mut next_idx: usize = 0;
     let mut steps = vec![];
@@ -85,6 +85,7 @@ pub fn compute_swap(
             by_amount_in,
         )
         .unwrap();
+
         let mut step_info = StepInfo::from(
             remainer_amount,
             &step_result,
@@ -106,7 +107,7 @@ pub fn compute_swap(
             swap_result.update(&step_result);
         }
         step_info.after_remainer = remainer_amount;
-        step_info.amount_used = amount - remainer_amount;
+        step_info.amount_used = (amount as u128) - remainer_amount;
 
         // Cross tick
         if next_tick.is_initialized && step_result.next_sqrt_price == next_tick.sqrt_price {
