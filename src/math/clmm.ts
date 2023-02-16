@@ -9,15 +9,17 @@ import {
 } from "../errors/errors";
 import { IncreaseLiquidityInput } from "../types";
 
-import type { ClmmpoolData, TickData } from "../types/clmmpool";
+import type { ClmmpoolData, TickArrayMapData, TickData } from "../types/clmmpool";
 import {
   CLMMPOOL_PROGRAM_ID,
   FEE_RATE_DENOMINATOR,
   MAX_SQRT_PRICE,
   MIN_SQRT_PRICE,
+  TICK_ARRAY_MAP_MAX_BIT_INDEX,
+  TICK_ARRAY_MAP_MIN_BIT_INDEX,
   ZERO_BN,
 } from "../types/constants";
-import { AddressUtil, TokenType } from "../utils";
+import { AddressUtil, PDAUtil, TickUtil, TokenType } from "../utils";
 import Decimal from "../utils/decimal";
 import { Percentage } from "./percentage";
 import { SwapUtils } from "./swap";
@@ -38,6 +40,7 @@ export type SwapResult = {
   refAmount: BN;
   nextSqrtPrice: BN;
   crossTickNum: number;
+  swapTickArrays: PublicKey[];
 };
 
 /**
@@ -401,7 +404,9 @@ export function computeSwap(
   byAmountIn: boolean,
   amount: BN,
   poolData: ClmmpoolData,
-  swapTicks: Array<TickData>
+  swapTicks: Array<TickData>,
+  clmmpool?: PublicKey,
+  tickArrayMap?: TickArrayMapData,
 ): SwapResult {
   let remainerAmount = amount;
   let currentLiquidity = poolData.liquidity;
@@ -414,10 +419,19 @@ export function computeSwap(
     refAmount: ZERO,
     nextSqrtPrice: ZERO,
     crossTickNum: 0,
+    swapTickArrays: [],
   };
 
   let targetSqrtPrice, signedLiquidityChange;
   const sqrtPriceLimit = SwapUtils.getDefaultSqrtPriceLimit(aToB);
+
+  let firstTickIndex = 0;
+
+  if (aToB) {
+    firstTickIndex = poolData.currentTickIndex
+  } else {
+    firstTickIndex = poolData.currentTickIndex + 1;
+  }
 
   for (const tick of swapTicks) {
     if (aToB) {
@@ -426,7 +440,7 @@ export function computeSwap(
       }
     } else {
       if (poolData.currentTickIndex >= tick.index) {
-      continue
+        continue
       }
     }
 
@@ -481,7 +495,63 @@ export function computeSwap(
   swapResult.amountIn = swapResult.amountIn.add(swapResult.feeAmount);
   swapResult.nextSqrtPrice = currentSqrtPrice;
 
+  const startArrayIndex = TickUtil.getArrayIndex(firstTickIndex, poolData.tickSpacing);
+
+  if (tickArrayMap && clmmpool) {
+    const swapTickArrays = getSwapTickArrays(clmmpool, aToB, startArrayIndex, tickArrayMap);
+    swapResult.swapTickArrays = swapTickArrays;
+  }
+
   return swapResult;
+}
+
+export function getSwapTickArrays(clmmpool: PublicKey, a2b: boolean, startArrayIndex: number, tickArrayMap: TickArrayMapData): PublicKey[] {
+  let arrayIndexs: boolean[] = [];
+  for (let index = 0; index < 868; index++) {
+    let word: number = tickArrayMap.bitmap[index];
+    for (let shift = 0; shift < 8; shift++) {
+      if (((word >> shift) & 0x01) > 0) {
+        arrayIndexs.push(true);
+      } else {
+        arrayIndexs.push(false);
+      }
+    }
+  }
+
+  const array_count = 3;
+  const tickArrays: PublicKey[] = [];
+
+  if (a2b) {
+    for (
+      let index = startArrayIndex;
+      index >= TICK_ARRAY_MAP_MIN_BIT_INDEX;
+      index -= 1
+    ) {
+      if (arrayIndexs[index]) {
+        const tickArray_i = PDAUtil.getTickArrayPDA(CLMMPOOL_PROGRAM_ID, clmmpool, index);
+        tickArrays.push(tickArray_i.publicKey);
+      }
+      if (tickArrays.length >= array_count) {
+        break;
+      }
+    }
+  } else {
+    for (
+      let index = startArrayIndex;
+      index < TICK_ARRAY_MAP_MAX_BIT_INDEX;
+      index += 1
+    ) {
+      if (arrayIndexs[index]) {
+        const tickArray_i = PDAUtil.getTickArrayPDA(CLMMPOOL_PROGRAM_ID, clmmpool, index);
+        tickArrays.push(tickArray_i.publicKey);
+      }
+      if (tickArrays.length >= array_count) {
+        break;
+      }
+    }
+  }
+
+  return tickArrays;
 }
 
 /**

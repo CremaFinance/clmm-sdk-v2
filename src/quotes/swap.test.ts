@@ -14,10 +14,11 @@ import { AnchorProvider, Program } from "@project-serum/anchor";
 import ClmmpoolIDL  from "../idls/clmmpool.json";
 import * as anchor from "@project-serum/anchor";
 import { ClmmpoolClientImpl } from "../impl/clmmpool-client-impl";
-import { listRewarderInfosFromClmmpool } from "../utils";
+import { listRewarderInfosFromClmmpool, PDAUtil } from "../utils";
 import { verifyNftCreatorBuilder } from "@metaplex-foundation/js";
 import { getAllPositions } from "../math/position";
 import { MathUtil } from "../math";
+import { computeSwap } from "../math";
 
 describe("swap_with_partner", () => {
   const provider = loadProvider();

@@ -1,0 +1,25 @@
+[package]
+name = "clmm-integration"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anchor-lang = "0.26.0"
+uint = "0.9.5"
+spl-token = { version = "3.3.0", features = ["no-entrypoint"] }
+spl-token-swap = { version = "3.0.0", features = ["no-entrypoint"] }
+thiserror = "1.0.31"
+anyhow = "1.0"
+serde_json = "1.0.82"
+serde = "1.0.140"
+lazy_static = "1.2.0"
+rust_decimal = { version = "1.26.1", features = ["maths"] }
+solana-sdk = "1.10.29"
+solana-client = "1.10.29"
+solana-program = "1.10.29"
+jupiter = { path = "./jupiter" }
+borsh = { version = "0.9.1", features = ["const-generics"] }
+sha2 = "0.10.2"
+solana-cli-config = "1.10.29"

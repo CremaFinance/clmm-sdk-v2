@@ -2,7 +2,7 @@
 [![crema](https://img.shields.io/badge/protocol-crema-blue)](https://www.crema.finance/)
 [![language](https://img.shields.io/badge/Language-typescript-blue)](https://www.typescriptlang.org/)
 
-# What is Crema-SDK-V2
+# What is Crema-SDK-V2?
 
 CLMM means concentrated liquidity market maker, it's crema sdk for new swap protocal. **[Crema](https://www.crema.finance/)** is a open-source concentrated liquidity market maker on the **Solana BlockChain** . The new version of crema increases the capital efficiency of decentralized exchanges.
 
