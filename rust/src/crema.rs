@@ -1,7 +1,9 @@
 use borsh::BorshDeserialize;
 use lazy_static::lazy_static;
 use rust_decimal::Decimal;
+use solana_program::program_pack::Pack;
 use solana_sdk::{pubkey, pubkey::Pubkey};
+use spl_token::state::Mint;
 use std::collections::HashMap;
 use std::ops::{Div, Mul, Sub};
 
@@ -63,7 +65,7 @@ impl CremaClmm {
             key: keyed_account.key,
             label,
             reserve_mints,
-            reserve_decimals: Default::default(),
+            reserve_decimals: [keyed_account.decimals_a, keyed_account.decimals_b],
             program_id: keyed_account.account.owner,
             pool_address: keyed_account.key,
             pool_info,
@@ -208,6 +210,11 @@ impl Amm for CremaClmm {
             .abs()
             .div(before_price)
             .mul(Decimal::from_f32_retain(100.0).unwrap());
+
+        println!(
+            "{:?}::{:?}::{:?}",
+            before_price, after_price, price_impact_pct
+        );
         Ok(Quote {
             not_enough_liquidity,
             min_in_amount: Option::None,
@@ -265,15 +272,15 @@ mod tests {
         let tick_map_address = Clmmpool::get_tick_map_address(&POOL, &SWAP_PROGRAM_ID);
         let tick_map_data = rpc_client.get_account_data(&tick_map_address).unwrap();
         let tick_array_map = Box::new(tick_map_data);
-        let harness = Harness::new(tick_array_map);
-        let keyed_account = harness.get_keyed_accounts(POOL).unwrap();
+        let harness = Harness::new(tick_array_map, 5, 9);
+        let keyed_account = harness.get_keyed_accounts(POOL, 5, 9).unwrap();
 
         let mut amm = CremaClmm::from_keyed_account(&keyed_account).unwrap();
         harness.update_amm(&mut amm);
 
         let quote = amm
             .quote(&QuoteParams {
-                in_amount: 600000000000,
+                in_amount: 6000000,
                 input_mint: token_b,
                 output_mint: token_a,
             })

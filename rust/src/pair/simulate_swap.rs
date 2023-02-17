@@ -56,6 +56,7 @@ impl ComputeSwapResult {
         self.amount_in = self.amount_in.checked_add(step_result.amount_in).unwrap();
         self.amount_out = self.amount_out.checked_add(step_result.amount_out).unwrap();
         self.fee_amount = self.fee_amount.checked_add(step_result.fee_amount).unwrap();
+        self.next_sqrt_price = step_result.next_sqrt_price;
     }
 }
 

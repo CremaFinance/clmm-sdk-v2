@@ -56,5 +56,7 @@ pub struct KeyedAccount {
     pub key: Pubkey,
     pub account: Account,
     pub params: Option<Value>,
+    pub decimals_a: u8,
+    pub decimals_b: u8,
     pub tick_array_map: Box<Vec<u8>>,
 }

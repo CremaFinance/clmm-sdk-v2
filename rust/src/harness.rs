@@ -7,24 +7,35 @@ use solana_sdk::pubkey::Pubkey;
 use std::collections::HashMap;
 
 pub struct Harness {
-    pub client: RpcClient,
-    pub tick_array_map: Box<Vec<u8>>,
+    client: RpcClient,
+    tick_array_map: Box<Vec<u8>>,
+    decimals_a: u8,
+    decimals_b: u8,
 }
 
 impl Harness {
-    pub fn new(tick_array_map: Box<Vec<u8>>) -> Self {
+    pub fn new(tick_array_map: Box<Vec<u8>>, decimals_a: u8, decimals_b: u8) -> Self {
         Self {
             client: RpcClient::new(RPC_URL),
             tick_array_map,
+            decimals_a,
+            decimals_b,
         }
     }
 
-    pub fn get_keyed_accounts(&self, key: Pubkey) -> Result<KeyedAccount> {
+    pub fn get_keyed_accounts(
+        &self,
+        key: Pubkey,
+        decimals_a: u8,
+        decimals_b: u8,
+    ) -> Result<KeyedAccount> {
         let account = self.client.get_account(&key)?;
         Ok(KeyedAccount {
             key,
             account,
             params: None,
+            decimals_a,
+            decimals_b,
             tick_array_map: self.tick_array_map.clone(),
         })
     }
