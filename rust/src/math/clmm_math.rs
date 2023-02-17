@@ -4,23 +4,21 @@ use std::{
 };
 
 use super::bn::Downcast;
-use crate::error::ErrorCode;
-
 use super::{
     bn::{Shift, U256},
     full_math::{DivRoundUpIf, FullMath},
     tick_math::get_sqrt_price_at_tick,
     tick_math::{MAX_SQRT_PRICE_X64, MIN_SQRT_PRICE_X64},
 };
+use crate::error::ErrorCode;
 
-pub const FEE_RATE_DENOMINATOR: u128 = 1_000_000;
+pub const FEE_RATE_DENOMINATOR: u64 = 1_000_000;
 
-#[derive(Debug)]
 pub struct SwapStepResult {
     pub next_sqrt_price: u128,
-    pub amount_in: u128,
-    pub amount_out: u128,
-    pub fee_amount: u128,
+    pub amount_in: u64,
+    pub amount_out: u64,
+    pub fee_amount: u64,
 }
 
 #[allow(dead_code)]
@@ -29,13 +27,13 @@ pub fn get_liquidity_from_amount(
     upper_index: i32,
     current_tick_index: i32,
     current_sqrt_price: u128,
-    amount: u128,
+    amount: u64,
     is_fixed_a: bool,
-) -> Result<(u128, u128, u128), ErrorCode> {
+) -> Result<(u128, u64, u64), ErrorCode> {
     let lower_price = get_sqrt_price_at_tick(lower_index);
     let upper_price = get_sqrt_price_at_tick(upper_index);
-    let mut amount_a: u128 = 0;
-    let mut amount_b: u128 = 0;
+    let mut amount_a: u64 = 0;
+    let mut amount_b: u64 = 0;
     let liquidity: u128;
     match is_fixed_a {
         true => {
@@ -68,7 +66,7 @@ pub fn get_liquidity_from_amount(
 pub fn get_liquidity_from_a(
     sqrt_price_0: u128,
     sqrt_price_1: u128,
-    amount_a: u128,
+    amount_a: u64,
     round_up: bool,
 ) -> Result<u128, ErrorCode> {
     let sqrt_price_diff = if sqrt_price_0 > sqrt_price_1 {
@@ -78,7 +76,7 @@ pub fn get_liquidity_from_a(
     };
 
     // sqrt_price_0 and sqrt_price_1 are all Q32.64(96 bit), so sqrt_price_0 * sqrt_price_1 * amount_a, the result max (numberator) is u256.
-    let numberator = sqrt_price_0.full_mul(sqrt_price_1).mul(amount_a as u64);
+    let numberator = sqrt_price_0.full_mul(sqrt_price_1).mul(amount_a);
     let div_res = numberator
         .checked_div_round_up_if(U256::from(sqrt_price_diff).shift_word_left(), round_up)
         .ok_or(ErrorCode::DivisorIsZero)?
@@ -90,7 +88,7 @@ pub fn get_liquidity_from_a(
 pub fn get_liquidity_from_b(
     sqrt_price_0: u128,
     sqrt_price_1: u128,
-    amount_b: u128,
+    amount_b: u64,
     round_up: bool,
 ) -> Result<u128, ErrorCode> {
     let sqrt_price_diff = if sqrt_price_0 > sqrt_price_1 {
@@ -120,7 +118,7 @@ pub fn get_delta_a(
     sqrt_price_1: u128,
     liquidity: u128,
     round_up: bool,
-) -> Result<u128, ErrorCode> {
+) -> Result<u64, ErrorCode> {
     let sqrt_price_diff = if sqrt_price_0 > sqrt_price_1 {
         sqrt_price_0 - sqrt_price_1
     } else {
@@ -134,10 +132,10 @@ pub fn get_delta_a(
     let (quotient, remainder) = numberator.div_mod(denomminator);
     match round_up && !remainder.is_zero() {
         true => (quotient + 1)
-            .checked_as_u128()
+            .checked_as_u64()
             .ok_or(ErrorCode::IntegerDowncastOverflow),
         false => quotient
-            .checked_as_u128()
+            .checked_as_u64()
             .ok_or(ErrorCode::IntegerDowncastOverflow),
     }
 }
@@ -155,7 +153,7 @@ pub fn get_delta_b(
     sqrt_price_1: u128,
     liquidity: u128,
     round_up: bool,
-) -> Result<u128, ErrorCode> {
+) -> Result<u64, ErrorCode> {
     let sqrt_price_diff = if sqrt_price_0 > sqrt_price_1 {
         sqrt_price_0 - sqrt_price_1
     } else {
@@ -169,7 +167,7 @@ pub fn get_delta_b(
     let should_round_up = round_up && product.0[0] > 0;
     let result = product
         .shift_word_right()
-        .checked_as_u128()
+        .checked_as_u64()
         .ok_or(ErrorCode::MultiplicationOverflow)?;
 
     match should_round_up {
@@ -191,7 +189,7 @@ pub fn get_delta_b(
 pub fn get_next_sqrt_price_a_up(
     sqrt_price: u128,
     liquidity: u128,
-    amount: u128,
+    amount: u64,
     by_amount_input: bool,
 ) -> Result<u128, ErrorCode> {
     if amount == 0 {
@@ -238,10 +236,10 @@ pub fn get_next_sqrt_price_a_up(
 pub fn get_next_sqrt_price_b_down(
     sqrt_price: u128,
     liquidity: u128,
-    amount: u128,
+    amount: u64,
     by_amount_input: bool,
 ) -> Result<u128, ErrorCode> {
-    let delta_sqrt_price = amount
+    let delta_sqrt_price = (amount as u128)
         .shl(64u32)
         .checked_div_round_up_if(liquidity, !by_amount_input)
         .ok_or(ErrorCode::DivisorIsZero)?;
@@ -263,7 +261,7 @@ pub fn get_next_sqrt_price_b_down(
 pub fn get_next_sqrt_price_from_input(
     sqrt_price: u128,
     liquidity: u128,
-    amount: u128,
+    amount: u64,
     a_to_b: bool,
 ) -> Result<u128, ErrorCode> {
     match a_to_b {
@@ -275,7 +273,7 @@ pub fn get_next_sqrt_price_from_input(
 pub fn get_next_sqrt_price_from_output(
     sqrt_price: u128,
     liquidity: u128,
-    amount: u128,
+    amount: u64,
     a_to_b: bool,
 ) -> Result<u128, ErrorCode> {
     match a_to_b {
@@ -289,10 +287,31 @@ pub fn get_delta_up_from_input(
     target_sqrt_price: u128,
     liquidity: u128,
     a_to_b: bool,
-) -> Result<u128, ErrorCode> {
-    match a_to_b {
-        true => get_delta_a(target_sqrt_price, current_sqrt_price, liquidity, true),
-        false => get_delta_b(current_sqrt_price, target_sqrt_price, liquidity, true),
+) -> Result<U256, ErrorCode> {
+    let sqrt_price_diff = if current_sqrt_price > target_sqrt_price {
+        current_sqrt_price.checked_sub(target_sqrt_price).unwrap()
+    } else {
+        target_sqrt_price.checked_sub(current_sqrt_price).unwrap()
+    };
+    if sqrt_price_diff == 0 || liquidity == 0 {
+        return Ok(U256::zero());
+    }
+    if a_to_b {
+        let numberator = liquidity
+            .full_mul(sqrt_price_diff)
+            .checked_shift_word_left()
+            .ok_or(ErrorCode::MultiplicationOverflow)?;
+        let denomminator = current_sqrt_price.full_mul(target_sqrt_price);
+        Ok(numberator
+            .checked_div_round_up_if(denomminator, true)
+            .unwrap())
+    } else {
+        let product = liquidity.full_mul(sqrt_price_diff);
+        let should_round_up = product.0[0] > 0;
+        if should_round_up {
+            return Ok(product.shift_word_right().checked_add(U256::one()).unwrap());
+        }
+        Ok(product.shift_word_right())
     }
 }
 
@@ -301,10 +320,27 @@ pub fn get_delta_down_from_output(
     target_sqrt_price: u128,
     liquidity: u128,
     a_to_b: bool,
-) -> Result<u128, ErrorCode> {
-    match a_to_b {
-        true => get_delta_b(target_sqrt_price, current_sqrt_price, liquidity, false),
-        false => get_delta_a(current_sqrt_price, target_sqrt_price, liquidity, false),
+) -> Result<U256, ErrorCode> {
+    let sqrt_price_diff = if current_sqrt_price > target_sqrt_price {
+        current_sqrt_price.checked_sub(target_sqrt_price).unwrap()
+    } else {
+        target_sqrt_price.checked_sub(current_sqrt_price).unwrap()
+    };
+    if sqrt_price_diff == 0 || liquidity == 0 {
+        return Ok(U256::zero());
+    }
+    if a_to_b {
+        let product = liquidity.full_mul(sqrt_price_diff);
+        Ok(product.shift_word_right())
+    } else {
+        let numberator = liquidity
+            .full_mul(sqrt_price_diff)
+            .checked_shift_word_left()
+            .ok_or(ErrorCode::MultiplicationOverflow)?;
+        let denomminator = current_sqrt_price.full_mul(target_sqrt_price);
+        Ok(numberator
+            .checked_div_round_up_if(denomminator, false)
+            .unwrap())
     }
 }
 
@@ -312,34 +348,35 @@ pub fn compute_swap_step(
     current_sqrt_price: u128,
     target_sqrt_price: u128,
     liquidity: u128,
-    amount: u128,
+    amount: u64,
     fee_rate: u16,
     by_amount_input: bool,
 ) -> Result<SwapStepResult, ErrorCode> {
     if liquidity == 0 {
         return Ok(SwapStepResult {
-            amount_in: 0u128,
-            amount_out: 0u128,
+            amount_in: 0u64,
+            amount_out: 0u64,
             next_sqrt_price: target_sqrt_price,
-            fee_amount: 0u128,
+            fee_amount: 0u64,
         });
     }
 
     let a_to_b = current_sqrt_price >= target_sqrt_price;
     let next_sqrt_price;
-    let amount_in: u128;
-    let amount_out: u128;
-    let fee_amount: u128;
+    let amount_in: u64;
+    let amount_out: u64;
+    let fee_amount: u64;
 
     match by_amount_input {
         true => {
             let amount_remain = amount.mul_div_floor(
-                FEE_RATE_DENOMINATOR.checked_sub(fee_rate as u128).unwrap(),
+                FEE_RATE_DENOMINATOR.checked_sub(fee_rate as u64).unwrap(),
                 FEE_RATE_DENOMINATOR,
             );
             let max_amount_in =
-                get_delta_up_from_input(current_sqrt_price, target_sqrt_price, liquidity, a_to_b)?;
-            if max_amount_in > amount_remain {
+                get_delta_up_from_input(current_sqrt_price, target_sqrt_price, liquidity, a_to_b)
+                    .unwrap();
+            if max_amount_in > U256::from(amount_remain) {
                 amount_in = amount_remain;
                 fee_amount = amount.checked_sub(amount_remain).unwrap();
                 next_sqrt_price = get_next_sqrt_price_from_input(
@@ -349,13 +386,15 @@ pub fn compute_swap_step(
                     a_to_b,
                 )?;
             } else {
-                amount_in = max_amount_in;
-                fee_amount = amount_in
-                    .mul_div_ceil(fee_rate as u128, FEE_RATE_DENOMINATOR - fee_rate as u128);
+                amount_in = max_amount_in.as_u64();
+                fee_amount =
+                    amount_in.mul_div_ceil(fee_rate as u64, FEE_RATE_DENOMINATOR - fee_rate as u64);
                 next_sqrt_price = target_sqrt_price;
             }
             amount_out =
-                get_delta_down_from_output(current_sqrt_price, next_sqrt_price, liquidity, a_to_b)?;
+                get_delta_down_from_output(current_sqrt_price, next_sqrt_price, liquidity, a_to_b)
+                    .unwrap()
+                    .as_u64();
         }
         false => {
             let max_amount_out = get_delta_down_from_output(
@@ -363,19 +402,22 @@ pub fn compute_swap_step(
                 target_sqrt_price,
                 liquidity,
                 a_to_b,
-            )?;
-            if max_amount_out > amount {
+            )
+            .unwrap();
+            if max_amount_out > U256::from(amount) {
                 amount_out = amount;
                 next_sqrt_price =
                     get_next_sqrt_price_from_output(current_sqrt_price, liquidity, amount, a_to_b)?;
             } else {
-                amount_out = max_amount_out;
+                amount_out = max_amount_out.as_u64();
                 next_sqrt_price = target_sqrt_price;
             }
             amount_in =
-                get_delta_up_from_input(current_sqrt_price, next_sqrt_price, liquidity, a_to_b)?;
+                get_delta_up_from_input(current_sqrt_price, next_sqrt_price, liquidity, a_to_b)
+                    .unwrap()
+                    .as_u64();
             fee_amount =
-                amount_in.mul_div_ceil(fee_rate as u128, FEE_RATE_DENOMINATOR - fee_rate as u128);
+                amount_in.mul_div_ceil(fee_rate as u64, FEE_RATE_DENOMINATOR - fee_rate as u64);
         }
     }
 
@@ -385,4 +427,24 @@ pub fn compute_swap_step(
         next_sqrt_price,
         fee_amount,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_delta_up_from_input;
+
+    #[test]
+    fn test_get_delta_up_from_input() {
+        let current_sqrt_price: u128 = 4116333652252349704;
+        let target_sqrt_price: u128 = 79084200890414257525634219231;
+        let liquidity: u128 = 25403716994;
+        let a_to_b = false;
+
+        let max_amount_in =
+            get_delta_up_from_input(current_sqrt_price, target_sqrt_price, liquidity, a_to_b)
+                .unwrap()
+                .as_u128();
+
+        println!("{:?}", max_amount_in);
+    }
 }

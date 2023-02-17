@@ -1,9 +1,7 @@
 use borsh::BorshDeserialize;
 use lazy_static::lazy_static;
 use rust_decimal::Decimal;
-use solana_program::program_pack::Pack;
 use solana_sdk::{pubkey, pubkey::Pubkey};
-use spl_token::state::Mint;
 use std::collections::HashMap;
 use std::ops::{Div, Mul, Sub};
 
@@ -199,9 +197,9 @@ impl Amm for CremaClmm {
         };
 
         let not_enough_liquidity = if by_amount_in {
-            swap_result.amount_in < quote_params.in_amount as u128
+            swap_result.amount_in < quote_params.in_amount
         } else {
-            swap_result.amount_out < quote_params.in_amount as u128
+            swap_result.amount_out < quote_params.in_amount
         };
 
         let fee_pct = Decimal::from_f32_retain(self.fee_rate as f32).unwrap();
@@ -280,7 +278,7 @@ mod tests {
 
         let quote = amm
             .quote(&QuoteParams {
-                in_amount: 6000000,
+                in_amount: 6000000000000,
                 input_mint: token_b,
                 output_mint: token_a,
             })
